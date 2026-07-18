@@ -71,7 +71,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
               exit={{ opacity: 0, x: 40, scale: 0.9 }}
               transition={{ type: 'spring', stiffness: 400, damping: 30 }}
               className={cn(
-                'pointer-events-auto flex items-start gap-3 rounded-xl border bg-card/95 p-4 shadow-xl backdrop-blur',
+                'pointer-events-auto flex items-start gap-3 rounded-sm border bg-card/95 p-4 shadow-xl backdrop-blur',
                 t.variant === 'success' && 'border-success/30',
                 t.variant === 'error' && 'border-destructive/30',
                 t.variant === 'warning' && 'border-warning/30',

@@ -83,7 +83,7 @@ export function DeployStep() {
                     onClick={() => setSelected(o.kind)}
                     disabled={busy}
                     className={cn(
-                      'flex flex-col items-start gap-2 rounded-2xl border p-4 text-left transition-all',
+                      'flex flex-col items-start gap-2 rounded-sm border p-4 text-left transition-all',
                       active
                         ? 'border-primary bg-primary/5 ring-2 ring-primary/30'
                         : 'border-border hover:border-primary/50 hover:bg-secondary/50',
@@ -138,7 +138,7 @@ export function DeployStep() {
                 )}
 
                 {!option.onChainAvailable() && (
-                  <p className="rounded-lg border border-warning/30 bg-warning/10 p-3 text-xs text-muted-foreground">
+                  <p className="rounded-sm border border-warning/40 bg-warning/10 p-3 text-xs text-muted-foreground">
                     <span className="font-semibold text-warning">Preview mode.</span> This network
                     build has no {selected === 'token' ? 'token program' : 'program loader'} address
                     configured, so we&apos;ll generate the genuine derived Meta &amp; Buffer addresses
@@ -172,7 +172,7 @@ export function DeployStep() {
           <Card className="border-success/40">
             <CardContent className="space-y-4 p-6">
               <div className="flex items-center gap-3">
-                <div className="flex size-11 items-center justify-center rounded-xl bg-success/10 text-success">
+                <div className="flex size-11 items-center justify-center rounded-sm bg-success/10 text-success">
                   <Cpu className="size-6" />
                 </div>
                 <div>

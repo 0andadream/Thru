@@ -112,7 +112,7 @@ export function FundStep() {
           <CardContent className="space-y-5 p-6">
             {account && <AddressRow label="Funding this account" value={account.address} href={accountUrl(account.address)} />}
 
-            <div className="flex items-center justify-between rounded-xl bg-secondary/40 px-4 py-3">
+            <div className="flex items-center justify-between rounded-sm bg-secondary/40 px-4 py-3">
               <div className="flex items-center gap-2">
                 <Wallet className="size-4 text-muted-foreground" />
                 <span className="text-sm text-muted-foreground">Current balance</span>
@@ -129,7 +129,7 @@ export function FundStep() {
             </div>
 
             {isFunded ? (
-              <div className="flex items-center justify-center gap-2 rounded-xl border border-success/30 bg-success/5 py-4 text-success">
+              <div className="flex items-center justify-center gap-2 rounded-sm border border-success/30 bg-success/5 py-4 text-success">
                 <PartyPopper className="size-5" />
                 <span className="font-semibold">You&apos;re funded and ready to build!</span>
               </div>
@@ -155,7 +155,7 @@ export function FundStep() {
             )}
 
             {phase === 'manual' && (
-              <div className="space-y-3 rounded-xl border border-warning/30 bg-warning/10 p-4 text-sm">
+              <div className="space-y-3 rounded-sm border border-warning/30 bg-warning/10 p-4 text-sm">
                 <p className="font-semibold text-warning">Manual funding</p>
                 <p className="text-muted-foreground">{message}</p>
                 <p className="text-muted-foreground">

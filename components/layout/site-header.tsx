@@ -15,11 +15,11 @@ const LINKS = [
 
 export function SiteHeader() {
   return (
-    <header className="sticky top-0 z-40 w-full border-b border-border/60 bg-background/70 backdrop-blur-xl">
+    <header className="sticky top-0 z-40 w-full border-b border-foreground bg-background/85 backdrop-blur">
       <div className="container flex h-16 items-center justify-between gap-4">
         <div className="flex items-center gap-3">
           <Logo />
-          <Badge variant="warning" className="hidden sm:inline-flex">
+          <Badge variant="outline" className="hidden sm:inline-flex">
             {thruConfig.network} · Testnet
           </Badge>
         </div>

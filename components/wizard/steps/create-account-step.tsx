@@ -116,7 +116,7 @@ export function CreateAccountStep() {
             </div>
 
             {generating || !account ? (
-              <div className="flex h-[62px] items-center justify-center rounded-xl border border-dashed border-border text-sm text-muted-foreground">
+              <div className="flex h-[62px] items-center justify-center rounded-sm border border-dashed border-border text-sm text-muted-foreground">
                 <Loader2 className="mr-2 size-4 animate-spin" /> Generating a secure keypair…
               </div>
             ) : (
@@ -129,7 +129,7 @@ export function CreateAccountStep() {
         {account && !generating && (
           <Card className="border-destructive/30">
             <CardContent className="space-y-4 p-5">
-              <div className="flex items-start gap-3 rounded-xl border border-destructive/30 bg-destructive/5 p-3">
+              <div className="flex items-start gap-3 rounded-sm border border-destructive/30 bg-destructive/5 p-3">
                 <AlertTriangle className="mt-0.5 size-5 shrink-0 text-destructive" />
                 <div className="space-y-1 text-sm">
                   <p className="font-semibold text-destructive">
@@ -154,7 +154,7 @@ export function CreateAccountStep() {
                     <CopyButton value={privateKeyText(account)} label="Copy private key" />
                   </div>
                 </div>
-                <div className="rounded-xl border border-border bg-secondary/40 p-3">
+                <div className="rounded-sm border border-border bg-secondary/40 p-3">
                   <code className="block break-all font-mono text-xs">
                     {revealed
                       ? privateKeyText(account)
@@ -178,7 +178,7 @@ export function CreateAccountStep() {
                   label="Copy to clipboard"
                   variant="outline"
                   showValue
-                  className="h-14 w-full rounded-2xl"
+                  className="h-14 w-full rounded-sm"
                 />
               </div>
             </CardContent>
@@ -190,7 +190,7 @@ export function CreateAccountStep() {
           <Card>
             <CardContent className="flex flex-col items-start justify-between gap-4 p-5 sm:flex-row sm:items-center">
               <div className="flex items-start gap-3">
-                <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-accent/10 text-accent">
+                <div className="flex size-10 shrink-0 items-center justify-center rounded-sm bg-accent/10 text-accent">
                   <Fingerprint className="size-5" />
                 </div>
                 <div>

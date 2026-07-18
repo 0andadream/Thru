@@ -16,6 +16,7 @@ const config: Config = {
     extend: {
       colors: {
         border: 'hsl(var(--border))',
+        'border-muted': 'hsl(var(--border-muted))',
         input: 'hsl(var(--input))',
         ring: 'hsl(var(--ring))',
         background: 'hsl(var(--background))',
@@ -59,8 +60,13 @@ const config: Config = {
       },
       borderRadius: {
         lg: 'var(--radius)',
-        md: 'calc(var(--radius) - 2px)',
-        sm: 'calc(var(--radius) - 4px)',
+        md: 'var(--radius)',
+        sm: 'var(--radius)',
+      },
+      boxShadow: {
+        hard: '3px 3px 0 0 hsl(var(--foreground))',
+        'hard-sm': '2px 2px 0 0 hsl(var(--foreground))',
+        'hard-primary': '3px 3px 0 0 hsl(var(--primary))',
       },
       fontFamily: {
         sans: ['var(--font-sans)', 'ui-sans-serif', 'system-ui', 'sans-serif'],

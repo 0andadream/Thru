@@ -32,9 +32,7 @@ export function StepHeading({
 }) {
   return (
     <div className="space-y-2 text-center">
-      {eyebrow && (
-        <p className="text-xs font-semibold uppercase tracking-widest text-primary">{eyebrow}</p>
-      )}
+      {eyebrow && <p className="label-mono text-primary">{eyebrow}</p>}
       <h2 className="text-2xl font-bold tracking-tight sm:text-3xl">{title}</h2>
       {description && (
         <p className="mx-auto max-w-xl text-sm text-muted-foreground sm:text-base">{description}</p>
@@ -56,9 +54,9 @@ export function AddressRow({
   mono?: boolean;
 }) {
   return (
-    <div className="flex items-center justify-between gap-3 rounded-xl border border-border bg-secondary/40 px-3 py-2.5">
+    <div className="flex items-center justify-between gap-3 rounded-sm border border-border-muted bg-secondary/50 px-3 py-2.5">
       <div className="min-w-0 flex-1">
-        <p className="text-xs font-medium text-muted-foreground">{label}</p>
+        <p className="label-mono text-muted-foreground">{label}</p>
         <code className={cn('block truncate text-sm', mono ? 'font-mono' : 'font-sans')} title={value}>
           <span className="sm:hidden">{truncateMiddle(value, 8, 8)}</span>
           <span className="hidden sm:inline">{value}</span>

@@ -32,8 +32,8 @@ export const metadata: Metadata = {
 
 export const viewport: Viewport = {
   themeColor: [
-    { media: '(prefers-color-scheme: light)', color: '#f8fafc' },
-    { media: '(prefers-color-scheme: dark)', color: '#080d1a' },
+    { media: '(prefers-color-scheme: light)', color: '#cdd9d0' },
+    { media: '(prefers-color-scheme: dark)', color: '#0f1512' },
   ],
   width: 'device-width',
   initialScale: 1,
@@ -47,7 +47,7 @@ export default function RootLayout({
       <body className={`${inter.variable} ${jetbrainsMono.variable} font-sans`}>
         <ThemeProvider
           attribute="class"
-          defaultTheme="dark"
+          defaultTheme="light"
           enableSystem
           disableTransitionOnChange
         >

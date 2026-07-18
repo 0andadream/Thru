@@ -29,9 +29,12 @@ private keys never touch a server.
      (`alice.yourname`), and optional URL / Twitter / linked-pubkey records.
   6. **Success Dashboard** — summary of everything created, explorer links,
      "Start over" / "Do more", and confetti 🎉.
-- **Beautiful, modern UI** — futuristic blue→green palette, aurora background,
-  glass cards, **dark mode** (default) + light mode, fully **mobile
-  responsive**.
+- **On-brand Thru UI** — the official industrial look: pale-sage engineering
+  grid, white bordered work panels with hard offset shadows, crimson-red
+  accent, near-black ink CTAs, monospace micro-labels, and sharp corners.
+  **Light mode** (default, matches thru.org) + an industrial **dark mode**,
+  fully **mobile responsive**. Copy is written in Thru's terse, "close to the
+  metal" voice.
 - **Copy buttons and explorer links everywhere.**
 - **Advanced mode toggle** exposing RPC host + chain id.
 - **Client-side only keys** with strong, repeated backup warnings.

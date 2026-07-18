@@ -50,7 +50,7 @@ export function SuccessStep() {
             initial={{ scale: 0, rotate: -20 }}
             animate={{ scale: 1, rotate: 0 }}
             transition={{ type: 'spring', stiffness: 260, damping: 18 }}
-            className="mx-auto mb-4 flex size-16 items-center justify-center rounded-2xl bg-gradient-to-br from-primary to-accent text-white shadow-lg shadow-primary/30"
+            className="mx-auto mb-4 flex size-16 items-center justify-center rounded-sm border border-foreground bg-primary text-primary-foreground shadow-hard"
           >
             <CheckCircle2 className="size-9" />
           </motion.div>
@@ -65,7 +65,7 @@ export function SuccessStep() {
           {checklist.map((c) => (
             <div
               key={c.label}
-              className="flex flex-col items-center gap-1.5 rounded-xl border border-border bg-card/60 p-3 text-center"
+              className="flex flex-col items-center gap-1.5 rounded-sm border border-border bg-card/60 p-3 text-center"
             >
               <c.icon className={c.done ? 'size-5 text-success' : 'size-5 text-muted-foreground'} />
               <span className="text-xs font-medium">{c.label}</span>
@@ -119,7 +119,7 @@ export function SuccessStep() {
         </Card>
 
         {/* Reminder */}
-        <div className="rounded-xl border border-warning/30 bg-warning/10 p-4 text-sm">
+        <div className="rounded-sm border border-warning/30 bg-warning/10 p-4 text-sm">
           <p className="font-semibold text-warning">One last reminder</p>
           <p className="text-muted-foreground">
             Make sure you saved your private key backup file. It&apos;s the only way to access this

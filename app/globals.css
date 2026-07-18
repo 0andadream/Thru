@@ -4,149 +4,160 @@
 
 @layer base {
   :root {
-    --background: 210 40% 98%;
-    --foreground: 222 47% 11%;
+    /* Thru brand — light (default). Pale sage page, white panels, crimson red. */
+    --background: 146 16% 84%;
+    --foreground: 0 0% 10%;
 
     --card: 0 0% 100%;
-    --card-foreground: 222 47% 11%;
+    --card-foreground: 0 0% 10%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 222 47% 11%;
+    --popover-foreground: 0 0% 10%;
 
-    /* Thru brand: deep blue → teal/green */
-    --primary: 199 89% 48%;
+    /* Thru red */
+    --primary: 4 74% 53%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 210 40% 96%;
-    --secondary-foreground: 222 47% 11%;
+    /* Muted green panel (sidebar boxes) */
+    --secondary: 146 18% 90%;
+    --secondary-foreground: 0 0% 12%;
 
-    --muted: 210 40% 96%;
-    --muted-foreground: 215 16% 47%;
+    --muted: 146 14% 92%;
+    --muted-foreground: 150 6% 38%;
 
-    --accent: 160 84% 39%;
+    /* Ink = the black CTA */
+    --accent: 0 0% 11%;
     --accent-foreground: 0 0% 100%;
 
-    --destructive: 0 72% 51%;
+    --destructive: 4 74% 47%;
     --destructive-foreground: 0 0% 100%;
 
-    --success: 142 71% 45%;
+    --success: 150 52% 34%;
     --success-foreground: 0 0% 100%;
 
-    --warning: 38 92% 50%;
+    --warning: 32 90% 42%;
     --warning-foreground: 0 0% 100%;
 
-    --border: 214 32% 91%;
-    --input: 214 32% 91%;
-    --ring: 199 89% 48%;
+    /* Crisp near-black hairline borders */
+    --border: 0 0% 16%;
+    --input: 0 0% 16%;
+    --ring: 4 74% 53%;
 
-    --radius: 0.85rem;
+    /* Subtle borders on the green page (dividers, muted separators) */
+    --border-muted: 150 12% 74%;
+
+    --radius: 0.15rem;
   }
 
   .dark {
-    --background: 222 47% 6%;
-    --foreground: 210 40% 98%;
+    /* Industrial dark — deep green-black, brighter red */
+    --background: 150 14% 7%;
+    --foreground: 0 0% 92%;
 
-    --card: 222 44% 9%;
-    --card-foreground: 210 40% 98%;
+    --card: 150 10% 10%;
+    --card-foreground: 0 0% 92%;
 
-    --popover: 222 44% 9%;
-    --popover-foreground: 210 40% 98%;
+    --popover: 150 10% 10%;
+    --popover-foreground: 0 0% 92%;
 
-    --primary: 199 89% 52%;
-    --primary-foreground: 222 47% 6%;
+    --primary: 4 82% 58%;
+    --primary-foreground: 0 0% 100%;
 
-    --secondary: 217 33% 17%;
-    --secondary-foreground: 210 40% 98%;
+    --secondary: 150 8% 15%;
+    --secondary-foreground: 0 0% 92%;
 
-    --muted: 217 33% 15%;
-    --muted-foreground: 215 20% 65%;
+    --muted: 150 8% 14%;
+    --muted-foreground: 150 6% 60%;
 
-    --accent: 160 84% 44%;
-    --accent-foreground: 222 47% 6%;
+    --accent: 0 0% 92%;
+    --accent-foreground: 0 0% 8%;
 
-    --destructive: 0 63% 50%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive: 4 74% 52%;
+    --destructive-foreground: 0 0% 100%;
 
-    --success: 142 71% 45%;
-    --success-foreground: 222 47% 6%;
+    --success: 150 50% 44%;
+    --success-foreground: 0 0% 8%;
 
-    --warning: 38 92% 55%;
-    --warning-foreground: 222 47% 6%;
+    --warning: 34 90% 55%;
+    --warning-foreground: 0 0% 8%;
 
-    --border: 217 33% 20%;
-    --input: 217 33% 20%;
-    --ring: 199 89% 52%;
+    --border: 0 0% 34%;
+    --input: 0 0% 34%;
+    --ring: 4 82% 58%;
+
+    --border-muted: 150 8% 22%;
   }
 }
 
 @layer base {
   * {
-    @apply border-border;
+    border-color: hsl(var(--border));
   }
   body {
     @apply bg-background text-foreground antialiased;
-    font-feature-settings: 'rlig' 1, 'calt' 1;
+    font-feature-settings: 'ss01' 1, 'cv01' 1;
+  }
+  ::selection {
+    background: hsl(var(--primary) / 0.9);
+    color: hsl(var(--primary-foreground));
   }
 }
 
 @layer utilities {
-  .text-gradient {
-    @apply bg-gradient-to-r from-primary via-sky-400 to-accent bg-clip-text text-transparent;
+  /* Solid red highlight for headline words */
+  .text-brand {
+    color: hsl(var(--primary));
   }
+
+  /* Mono uppercase micro-label used all over the industrial UI */
+  .label-mono {
+    @apply font-mono text-[11px] font-semibold uppercase tracking-[0.14em];
+  }
+
+  /* Hard offset shadow — the boxy engineering look */
+  .shadow-hard {
+    box-shadow: 3px 3px 0 0 hsl(var(--foreground));
+  }
+  .shadow-hard-sm {
+    box-shadow: 2px 2px 0 0 hsl(var(--foreground));
+  }
+  .shadow-hard-primary {
+    box-shadow: 3px 3px 0 0 hsl(var(--primary));
+  }
+
+  /* Faint engineering grid on the page background */
   .bg-grid {
     background-image: linear-gradient(
         to right,
-        hsl(var(--border) / 0.35) 1px,
+        hsl(var(--border-muted) / 0.5) 1px,
         transparent 1px
       ),
-      linear-gradient(to bottom, hsl(var(--border) / 0.35) 1px, transparent 1px);
-    background-size: 44px 44px;
+      linear-gradient(to bottom, hsl(var(--border-muted) / 0.5) 1px, transparent 1px);
+    background-size: 32px 32px;
   }
-  .glass {
-    @apply border border-white/10 bg-white/60 backdrop-blur-xl dark:bg-white/[0.03];
+
+  /* The red angled "ribbon" banner (like the thru SDK header) */
+  .thru-ribbon {
+    background: hsl(var(--primary));
+    color: hsl(var(--primary-foreground));
+    clip-path: polygon(0 0, 100% 0, calc(100% - 18px) 100%, 0 100%);
   }
 }
 
-/* Aurora background glow used behind the hero + wizard shell */
-.aurora {
-  position: absolute;
-  inset: 0;
-  overflow: hidden;
-  pointer-events: none;
-  z-index: 0;
-}
-.aurora::before,
-.aurora::after {
-  content: '';
-  position: absolute;
-  width: 55vw;
-  height: 55vw;
-  border-radius: 9999px;
-  filter: blur(120px);
-  opacity: 0.5;
-  animation: float 12s ease-in-out infinite;
-}
-.aurora::before {
-  top: -20%;
-  left: -10%;
-  background: radial-gradient(circle at center, hsl(199 89% 55% / 0.55), transparent 60%);
-}
-.aurora::after {
-  bottom: -25%;
-  right: -10%;
-  background: radial-gradient(circle at center, hsl(160 84% 45% / 0.5), transparent 60%);
-  animation-delay: -6s;
-}
-
-/* Custom scrollbar for a more polished feel */
+/* Custom scrollbar */
 ::-webkit-scrollbar {
-  width: 10px;
-  height: 10px;
+  width: 12px;
+  height: 12px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: hsl(var(--border));
-  border-radius: 9999px;
+  background: hsl(var(--foreground) / 0.25);
+  border: 3px solid transparent;
+  background-clip: padding-box;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: hsl(var(--muted-foreground) / 0.5);
+  background: hsl(var(--foreground) / 0.45);
+  background-clip: padding-box;
 }

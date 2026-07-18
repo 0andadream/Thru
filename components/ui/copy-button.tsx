@@ -90,7 +90,7 @@ export function CopyField({
   return (
     <div className={cn('space-y-1.5', className)}>
       {label && <p className="text-xs font-medium text-muted-foreground">{label}</p>}
-      <div className="flex items-center gap-2 rounded-xl border border-border bg-secondary/50 px-3 py-2">
+      <div className="flex items-center gap-2 rounded-sm border border-border bg-secondary/50 px-3 py-2">
         <code
           className={cn(
             'flex-1 truncate text-sm',

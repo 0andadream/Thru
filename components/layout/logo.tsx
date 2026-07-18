@@ -1,34 +1,21 @@
 import { cn } from '@/lib/utils';
 
-export function Logo({ className }: { className?: string }) {
+export function Logo({ className, showWord = true }: { className?: string; showWord?: boolean }) {
   return (
-    <span className={cn('flex items-center gap-2 font-semibold', className)}>
-      <svg
-        width="28"
-        height="28"
-        viewBox="0 0 32 32"
-        fill="none"
-        xmlns="http://www.w3.org/2000/svg"
-        aria-hidden
-        className="shrink-0"
-      >
-        <defs>
-          <linearGradient id="thru-g" x1="0" y1="0" x2="32" y2="32">
-            <stop stopColor="#0ea5e9" />
-            <stop offset="1" stopColor="#10b981" />
-          </linearGradient>
-        </defs>
-        <rect width="32" height="32" rx="9" fill="url(#thru-g)" />
-        <path
-          d="M8 12h16M16 12v12"
-          stroke="white"
-          strokeWidth="2.6"
-          strokeLinecap="round"
-        />
-      </svg>
-      <span className="text-lg tracking-tight">
-        Thru<span className="text-primary"> Onboard</span>
+    <span className={cn('flex items-center gap-2.5 font-semibold', className)}>
+      {/* Red disc mark with a stylized bird/thru glyph */}
+      <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden>
+          <path
+            d="M3 14c4.5 1 8-1.5 10.5-6C12.5 10 15 12 20 11c-3 4-7.5 6-12 5.5L5 20l-2-6z"
+            fill="currentColor"
+          />
+          <circle cx="16.5" cy="8" r="1" fill="hsl(var(--primary))" />
+        </svg>
       </span>
+      {showWord && (
+        <span className="font-mono text-xl font-bold italic tracking-tight">thru</span>
+      )}
     </span>
   );
 }

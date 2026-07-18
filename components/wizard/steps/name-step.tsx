@@ -152,7 +152,7 @@ export function NameStep() {
               </div>
 
               {/* Optional records */}
-              <details className="group rounded-xl border border-border" open={advanced}>
+              <details className="group rounded-sm border border-border" open={advanced}>
                 <summary className="flex cursor-pointer list-none items-center justify-between px-4 py-3 text-sm font-medium">
                   <span className="flex items-center gap-2">
                     <Link2 className="size-4 text-muted-foreground" />
@@ -184,7 +184,7 @@ export function NameStep() {
                       placeholder="yourhandle"
                     />
                   </div>
-                  <div className="flex items-center justify-between gap-3 rounded-lg bg-secondary/40 px-3 py-2">
+                  <div className="flex items-center justify-between gap-3 rounded-sm border border-border-muted bg-secondary/40 px-3 py-2">
                     <div className="text-sm">
                       <p className="font-medium">Link this account&apos;s public key</p>
                       <p className="text-xs text-muted-foreground">Point the name at your address.</p>
@@ -207,7 +207,7 @@ export function NameStep() {
 
               {/* Address preview */}
               {preview && (
-                <div className="space-y-2 rounded-xl bg-secondary/30 p-3">
+                <div className="space-y-2 rounded-sm bg-secondary/30 p-3">
                   <p className="text-xs font-medium text-muted-foreground">These addresses will be registered:</p>
                   <AddressRow label="Root name address" value={preview.rootAddress} />
                   <AddressRow label="Subdomain address" value={preview.subdomainAddress} />
@@ -239,7 +239,7 @@ export function NameStep() {
             <CardContent className="space-y-4 p-6">
               <div className="text-center">
                 <p className="text-sm text-muted-foreground">You now own</p>
-                <p className="font-mono text-2xl font-bold text-gradient">{name.fullName}</p>
+                <p className="font-mono text-2xl font-bold text-brand">{name.fullName}</p>
                 <Badge variant={name.onChain ? 'success' : 'secondary'} className="mt-2">
                   {name.onChain ? 'Registered on-chain' : 'Reserved (preview)'}
                 </Badge>
