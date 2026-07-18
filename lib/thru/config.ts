@@ -19,8 +19,8 @@ export const thruConfig = {
     'https://docs.thru.org/program-development/setting-up-thru-devkit',
 
   // Amount to request per faucet withdraw (base units; CLI caps at 10000/tx).
-  faucetAmount: Number(process.env.NEXT_PUBLIC_FAUCET_AMOUNT ?? '10000'),
-  faucetAmountLabel: process.env.NEXT_PUBLIC_FAUCET_AMOUNT_LABEL ?? '10,000 units',
+  faucetAmount: Number(process.env.NEXT_PUBLIC_FAUCET_AMOUNT ?? '1000'),
+  faucetAmountLabel: process.env.NEXT_PUBLIC_FAUCET_AMOUNT_LABEL ?? 'test tokens',
 
   // Program addresses — blank means the corresponding feature runs in a
   // clearly-labelled preview / disabled state instead of failing hard.

@@ -38,9 +38,28 @@ const VM_NONCE_TOO_LOW = -511;
 const VM_NONCE_TOO_HIGH = -510;
 const VM_FEE_PAYER_DOES_NOT_EXIST = -508;
 
+const VM_MESSAGES: Record<number, string> = {
+  [-511]: 'nonce too low',
+  [-510]: 'nonce too high',
+  [-509]: 'insufficient fee-payer balance',
+  [-508]: 'fee-payer account does not exist',
+  [-507]: 'account not live yet',
+  [-506]: 'transaction expired',
+  [-765]: 'the faucet program rejected the claim (it may be empty, rate-limited, or the amount is over its per-claim limit)',
+  [-766]: 'invalid program account',
+  [-767]: 'program execution failed',
+  [-764]: 'compute units exhausted',
+};
+
 class VmError extends Error {
-  constructor(public code: number) {
-    super(`The network rejected the transaction (vm error ${code}).`);
+  constructor(
+    public code: number,
+    public userErrorCode?: bigint,
+  ) {
+    const label = VM_MESSAGES[code] ?? `vm error ${code}`;
+    const extra =
+      userErrorCode != null && userErrorCode !== 0n ? ` (program code ${userErrorCode})` : '';
+    super(`${label}${extra} [vm ${code}]`);
     this.name = 'VmError';
   }
 }
@@ -76,7 +95,7 @@ async function submit(rawTransaction: Uint8Array, onPhase?: (p: TxPhase) => void
   for await (const update of thru.transactions.sendAndTrack(rawTransaction, { timeoutMs: 60_000 })) {
     const exec = update.executionResult;
     if (exec && exec.vmError && exec.vmError !== 0) {
-      throw new VmError(exec.vmError);
+      throw new VmError(exec.vmError, exec.userErrorCode);
     }
     const done =
       exec ||
