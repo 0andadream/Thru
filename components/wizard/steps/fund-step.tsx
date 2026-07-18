@@ -1,27 +1,15 @@
 'use client';
 
 import * as React from 'react';
-import {
-  Coins,
-  ExternalLink,
-  Eye,
-  EyeOff,
-  Loader2,
-  PartyPopper,
-  RefreshCw,
-  Terminal,
-  Wallet,
-} from 'lucide-react';
+import { Coins, Loader2, PartyPopper, RefreshCw, Wallet } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { CopyButton } from '@/components/ui/copy-button';
 import { useToast } from '@/components/ui/toast';
 import { useWizard } from '../wizard-context';
 import { AddressRow, StepHeading, StepMotion, StepNav } from '../step-parts';
-import { faucetGatewayConfigured, requestFaucet } from '@/lib/thru/faucet';
+import { requestFaucet } from '@/lib/thru/faucet';
 import { formatBalance, getAccountSnapshot, waitForFunds } from '@/lib/thru/account';
-import { privateKeyText } from '@/lib/thru/keys';
 import { accountUrl } from '@/lib/thru/explorer';
 import { thruConfig } from '@/lib/thru/config';
 import { popSuccess } from '@/lib/confetti';
@@ -35,18 +23,14 @@ export function FundStep() {
   const [balance, setBalance] = React.useState<bigint>(0n);
   const [message, setMessage] = React.useState<string>('');
   const [checking, setChecking] = React.useState(false);
-  const [revealKey, setRevealKey] = React.useState(false);
-  const [gateway, setGateway] = React.useState(false);
   const abortRef = React.useRef<AbortController | null>(null);
 
   const isFunded = phase === 'funded' || funded;
 
-  // Check for an optional HTTP faucet gateway, and poll balance while unfunded.
+  // Poll balance while unfunded so the step advances the moment tokens land.
   React.useEffect(() => {
     if (!account) return;
-    void faucetGatewayConfigured().then(setGateway);
     void refreshBalance();
-
     const timer = setInterval(() => {
       if (!isFunded) void refreshBalance(true);
     }, 6000);
@@ -63,9 +47,7 @@ export function FundStep() {
     try {
       const snap = await getAccountSnapshot(account.address);
       setBalance(snap.balance);
-      if (snap.balance > 0n && !isFunded) {
-        markFunded();
-      }
+      if (snap.balance > 0n && !isFunded) markFunded();
     } catch {
       /* RPC hiccup — leave state as-is */
     } finally {
@@ -80,8 +62,7 @@ export function FundStep() {
     toast({ variant: 'success', title: 'Tokens received!', description: 'Your account is funded.' });
   }
 
-  // Optional one-click path (only when a gateway is configured for this deploy).
-  async function handleGatewayFaucet() {
+  async function handleFaucet() {
     if (!account) return;
     setPhase('requesting');
     setMessage('');
@@ -90,7 +71,11 @@ export function FundStep() {
       if (!res.ok) {
         setPhase('error');
         setMessage(res.message);
-        toast({ variant: 'error', title: 'Faucet request failed', description: res.message });
+        toast({
+          variant: res.manual ? 'warning' : 'error',
+          title: res.manual ? 'Faucet not configured' : 'Faucet request failed',
+          description: res.message,
+        });
         return;
       }
       toast({ variant: 'success', title: 'Faucet request sent', description: res.message });
@@ -105,7 +90,7 @@ export function FundStep() {
       if (snap.balance > 0n) markFunded();
       else {
         setPhase('error');
-        setMessage('Tokens have not arrived yet. The faucet may be busy — try again or use the CLI below.');
+        setMessage('Tokens have not arrived yet. The faucet may be busy — try again in a moment.');
       }
     } catch (err) {
       if ((err as Error)?.name === 'AbortError') return;
@@ -114,28 +99,7 @@ export function FundStep() {
     }
   }
 
-  const pk = account ? privateKeyText(account) : '';
-  const maskedPk = revealKey ? pk : `${pk.slice(0, 6)}${'•'.repeat(12)}${pk.slice(-4)}`;
-
-  const steps: { label: string; display: string; copy: string }[] = account
-    ? [
-        {
-          label: 'Install the Thru CLI',
-          display: 'npm i -g thru',
-          copy: 'npm i -g thru',
-        },
-        {
-          label: 'Import your key (stays on your machine)',
-          display: `thru keys add default ${maskedPk}`,
-          copy: `thru keys add default ${pk}`,
-        },
-        {
-          label: `Claim ${thruConfig.faucetAmountLabel} from the faucet`,
-          display: `thru faucet withdraw default ${thruConfig.faucetAmount} --url ${thruConfig.rpcUrl}`,
-          copy: `thru faucet withdraw default ${thruConfig.faucetAmount} --url ${thruConfig.rpcUrl}`,
-        },
-      ]
-    : [];
+  const busy = phase === 'requesting' || phase === 'waiting';
 
   return (
     <StepMotion>
@@ -143,14 +107,9 @@ export function FundStep() {
         <StepHeading
           eyebrow="Step 2"
           title="Fund your account"
-          description={
-            gateway
-              ? `Tap the button to get free ${thruConfig.network} test tokens — we claim them from the on-chain faucet for you. Your balance updates automatically.`
-              : `Thru's faucet is an on-chain program. Claim ${thruConfig.network} test tokens with the Thru CLI below — three commands, pre-filled with your key. Your balance updates here automatically.`
-          }
+          description={`Get free ${thruConfig.network} test tokens to pay for transactions — we claim them from the on-chain faucet for you. Your balance updates automatically.`}
         />
 
-        {/* Balance */}
         <Card className={isFunded ? 'border-success' : undefined}>
           <CardContent className="space-y-5 p-6">
             {account && (
@@ -171,22 +130,19 @@ export function FundStep() {
               </div>
             </div>
 
-            {isFunded && (
+            {isFunded ? (
               <div className="flex items-center justify-center gap-2 rounded-sm border border-success bg-success/5 py-4 text-success">
                 <PartyPopper className="size-5" />
                 <span className="font-semibold">You&apos;re funded and ready to build!</span>
               </div>
-            )}
-
-            {/* Optional one-click gateway button */}
-            {!isFunded && gateway && (
+            ) : (
               <Button
                 variant="gradient"
                 size="lg"
                 className="w-full"
-                onClick={handleGatewayFaucet}
-                loading={phase === 'requesting' || phase === 'waiting'}
-                disabled={phase === 'requesting' || phase === 'waiting'}
+                onClick={handleFaucet}
+                loading={busy}
+                disabled={busy}
               >
                 {phase === 'waiting' ? (
                   <>
@@ -194,7 +150,7 @@ export function FundStep() {
                   </>
                 ) : (
                   <>
-                    <Coins /> Get {thruConfig.faucetAmountLabel} (instant)
+                    <Coins /> Get {thruConfig.faucetAmountLabel}
                   </>
                 )}
               </Button>
@@ -204,63 +160,9 @@ export function FundStep() {
           </CardContent>
         </Card>
 
-        {/* CLI claim steps — primary when there's no one-click relayer, else a fallback */}
-        {!isFunded && account && (
-          <Card>
-            <CardContent className="space-y-4 p-6">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2 text-sm font-semibold">
-                  <Terminal className="size-4 text-primary" />
-                  {gateway ? 'Prefer the command line?' : 'Claim with the Thru CLI'}
-                </div>
-                <Button variant="ghost" size="sm" onClick={() => setRevealKey((v) => !v)}>
-                  {revealKey ? <EyeOff /> : <Eye />}
-                  {revealKey ? 'Hide key' : 'Reveal key'}
-                </Button>
-              </div>
-
-              <ol className="space-y-3">
-                {steps.map((s, i) => (
-                  <li key={i} className="space-y-1.5">
-                    <p className="label-mono text-muted-foreground">
-                      {i + 1}. {s.label}
-                    </p>
-                    <div className="flex items-stretch gap-2">
-                      <code className="flex min-w-0 flex-1 items-center overflow-x-auto rounded-sm border border-foreground bg-foreground px-3 py-2 font-mono text-xs text-background">
-                        <span className="mr-2 shrink-0 select-none text-primary">$</span>
-                        <span className="whitespace-pre">{s.display}</span>
-                      </code>
-                      <CopyButton value={s.copy} variant="outline" className="h-auto shrink-0" />
-                    </div>
-                  </li>
-                ))}
-              </ol>
-
-              <div className="flex flex-col gap-3 border-t border-border-muted pt-4 sm:flex-row sm:items-center sm:justify-between">
-                <p className="text-xs text-muted-foreground">
-                  Commands run locally — your key never leaves your machine. Balance refreshes
-                  automatically once the claim lands.
-                </p>
-                <Button variant="secondary" size="sm" onClick={() => refreshBalance()} loading={checking} className="shrink-0">
-                  <RefreshCw className="size-4" /> Check balance
-                </Button>
-              </div>
-
-              <a
-                href={thruConfig.devkitDocsUrl}
-                target="_blank"
-                rel="noreferrer"
-                className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline"
-              >
-                New to the CLI? Read the DevKit setup guide <ExternalLink className="size-3.5" />
-              </a>
-            </CardContent>
-          </Card>
-        )}
-
         <p className="text-center text-xs text-muted-foreground">
-          Faucet withdrawals are capped per transaction to keep {thruConfig.network} healthy. Test
-          tokens have no monetary value.
+          Faucet claims are rate limited to keep {thruConfig.network} healthy. Test tokens have no
+          monetary value.
         </p>
 
         <StepNav

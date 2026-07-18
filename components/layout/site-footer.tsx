@@ -1,4 +1,4 @@
-import { ShieldAlert } from 'lucide-react';
+import { Heart, ShieldAlert } from 'lucide-react';
 import { thruConfig } from '@/lib/thru/config';
 
 export function SiteFooter() {
@@ -30,6 +30,20 @@ export function SiteFooter() {
               GitHub
             </a>
           </div>
+        </div>
+
+        <div className="flex items-center justify-center gap-1.5 pt-1 font-mono text-xs text-muted-foreground">
+          <span>made with</span>
+          <Heart className="size-3.5 fill-primary text-primary" aria-label="love" />
+          <span>·</span>
+          <a
+            href="https://x.com/mattdreams"
+            target="_blank"
+            rel="noreferrer noopener"
+            className="font-semibold text-foreground underline-offset-4 hover:text-primary hover:underline"
+          >
+            matt
+          </a>
         </div>
       </div>
     </footer>
