@@ -19,6 +19,22 @@ export interface FaucetResponse {
   retryAfter?: number;
 }
 
+/**
+ * Whether this deployment has an optional HTTP faucet gateway configured. When
+ * false (the common case), the UI guides the user through the real on-chain
+ * faucet claim via the `thru` CLI instead of showing a one-click button.
+ */
+export async function faucetGatewayConfigured(): Promise<boolean> {
+  try {
+    const res = await fetch('/api/faucet', { method: 'GET' });
+    if (!res.ok) return false;
+    const data = (await res.json()) as { configured?: boolean };
+    return !!data.configured;
+  } catch {
+    return false;
+  }
+}
+
 export async function requestFaucet(address: string): Promise<FaucetResponse> {
   const res = await fetch('/api/faucet', {
     method: 'POST',

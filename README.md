@@ -20,8 +20,11 @@ private keys never touch a server.
   2. **Create Account** — Ed25519 keypair generated in the browser, public
      address shown, one-click JSON keystore download + copy, repeated backup
      warnings, and **optional passkey** registration (WebAuthn).
-  3. **Get Tokens** — one-click faucet drip (via a rate-limited server proxy)
-     with live balance polling.
+  3. **Get Tokens** — Thru's faucet is an **on-chain** program, so this step
+     walks the user through the real `thru` CLI claim (three commands,
+     pre-filled with their key) and **auto-detects the balance landing** by
+     polling RPC. An optional one-click button appears if you configure an HTTP
+     faucet gateway (`FAUCET_URL`).
   4. **Deploy Program** — choose **Simple Token**, **Counter**, or **Hello
      World**; deploy in one click and see the resulting **Meta + Buffer**
      addresses.
@@ -82,8 +85,8 @@ Everything network-specific is read from environment variables — see
 | `NEXT_PUBLIC_THRU_RPC_URL` | RPC endpoint the browser talks to | `https://rpc.alphanet.thru.org` |
 | `NEXT_PUBLIC_THRU_EXPLORER_URL` | Block explorer base URL | `https://explorer.alphanet.thru.org` |
 | `NEXT_PUBLIC_THRU_NETWORK` | Display name | `Alphanet` |
-| `FAUCET_URL` | Faucet endpoint (server-side, proxied) | _(blank → manual mode)_ |
-| `FAUCET_RATE_LIMIT_PER_HOUR` | Faucet requests per IP per hour | `3` |
+| `FAUCET_URL` | Optional HTTP faucet **gateway** (server-side, proxied). Blank → CLI flow only. Thru's real faucet is on-chain via the `thru` CLI. | _(blank)_ |
+| `FAUCET_RATE_LIMIT_PER_HOUR` | Gateway faucet requests per IP per hour | `3` |
 | `NEXT_PUBLIC_TOKEN_PROGRAM_ADDRESS` | Token program address (enables real token mint) | _(blank → preview)_ |
 | `NEXT_PUBLIC_NAME_SERVICE_PROGRAM_ADDRESS` | Name Service program address | _(blank → preview)_ |
 | `NEXT_PUBLIC_PROGRAM_LOADER_ADDRESS` | Program loader (enables Counter / Hello World deploy) | _(blank → preview)_ |
@@ -94,8 +97,9 @@ This tool ships wired to the real Thru SDK. Some actions require a
 network-specific **program address** that isn't hard-coded in the SDK:
 
 - **Account creation & signing** — always real (client-side Ed25519).
-- **Faucet & balance** — real as soon as `FAUCET_URL` is set; balances read
-  from live RPC.
+- **Faucet & balance** — balances always read from live RPC. Funding uses the
+  real on-chain faucet via the `thru` CLI (guided, key pre-filled); set
+  `FAUCET_URL` only if you also run an HTTP faucet gateway.
 - **Simple Token deploy** — a **real on-chain token mint** (via
   `@thru/programs/token`) as soon as `NEXT_PUBLIC_TOKEN_PROGRAM_ADDRESS` is set.
 - **Counter / Hello World deploy** and **Name Service** — real once their

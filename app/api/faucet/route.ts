@@ -16,6 +16,15 @@ function clientIp(req: NextRequest): string {
   return req.headers.get('x-real-ip') ?? 'unknown';
 }
 
+/**
+ * Lets the client discover whether an optional HTTP faucet *gateway* is wired
+ * up for this deployment. Thru's real faucet is on-chain (claimed via the CLI),
+ * so most deployments have no gateway and the UI shows the CLI steps instead.
+ */
+export async function GET() {
+  return NextResponse.json({ configured: FAUCET_URL.length > 0 });
+}
+
 export async function POST(req: NextRequest) {
   let address = '';
   try {

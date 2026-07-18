@@ -13,7 +13,15 @@ export const thruConfig = {
     process.env.NEXT_PUBLIC_THRU_EXPLORER_URL ?? 'https://explorer.alphanet.thru.org',
   chainId: Number(process.env.NEXT_PUBLIC_THRU_CHAIN_ID ?? '1'),
 
-  faucetAmountLabel: process.env.NEXT_PUBLIC_FAUCET_AMOUNT_LABEL ?? '10 tTHRU',
+  docsUrl: process.env.NEXT_PUBLIC_THRU_DOCS_URL ?? 'https://docs.thru.org',
+  // The Thru faucet is an on-chain program claimed with the `thru` CLI.
+  devkitDocsUrl:
+    process.env.NEXT_PUBLIC_THRU_DEVKIT_DOCS_URL ??
+    'https://docs.thru.org/program-development/setting-up-thru-devkit',
+
+  // Amount to request per faucet withdraw (base units; CLI caps at 10000/tx).
+  faucetAmount: Number(process.env.NEXT_PUBLIC_FAUCET_AMOUNT ?? '10000'),
+  faucetAmountLabel: process.env.NEXT_PUBLIC_FAUCET_AMOUNT_LABEL ?? '10,000 units',
 
   // Program addresses — blank means the corresponding feature runs in a
   // clearly-labelled preview / disabled state instead of failing hard.
