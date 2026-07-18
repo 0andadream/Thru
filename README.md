@@ -20,11 +20,16 @@ private keys never touch a server.
   2. **Create Account** — Ed25519 keypair generated in the browser, public
      address shown, one-click JSON keystore download + copy, repeated backup
      warnings, and **optional passkey** registration (WebAuthn).
-  3. **Get Tokens** — Thru's faucet is an **on-chain** program, so this step
-     walks the user through the real `thru` CLI claim (three commands,
-     pre-filled with their key) and **auto-detects the balance landing** by
-     polling RPC. An optional one-click button appears if you configure an HTTP
-     faucet gateway (`FAUCET_URL`).
+  3. **Get Tokens** — Thru's faucet is an **on-chain** program (a fee payer
+     claims tokens for a recipient). Two modes:
+     - **One-click (recommended for public deploys):** configure a **built-in
+       relayer** — give the server the official `thru` CLI + a funded operator
+       key and the user just taps a button; the server runs `thru faucet
+       withdraw <userAddress> <amount>` paying the fee from the operator. (Or
+       point `FAUCET_URL` at your own HTTP faucet gateway.)
+     - **Guided CLI (zero server setup):** the step shows the real `thru` CLI
+       commands pre-filled with the user's key.
+     Either way the step **auto-detects the balance landing** by polling RPC.
   4. **Deploy Program** — choose **Simple Token**, **Counter**, or **Hello
      World**; deploy in one click and see the resulting **Meta + Buffer**
      addresses.
@@ -85,8 +90,11 @@ Everything network-specific is read from environment variables — see
 | `NEXT_PUBLIC_THRU_RPC_URL` | RPC endpoint the browser talks to | `https://rpc.alphanet.thru.org` |
 | `NEXT_PUBLIC_THRU_EXPLORER_URL` | Block explorer base URL | `https://explorer.alphanet.thru.org` |
 | `NEXT_PUBLIC_THRU_NETWORK` | Display name | `Alphanet` |
-| `FAUCET_URL` | Optional HTTP faucet **gateway** (server-side, proxied). Blank → CLI flow only. Thru's real faucet is on-chain via the `thru` CLI. | _(blank)_ |
-| `FAUCET_RATE_LIMIT_PER_HOUR` | Gateway faucet requests per IP per hour | `3` |
+| `THRU_CLI_BIN` | Path to the `thru` binary to enable the **built-in faucet relayer** (one-click funding). | _(blank)_ |
+| `THRU_FAUCET_OPERATOR_KEY` | 64-hex **funded** key the relayer uses to pay faucet-claim fees (server secret). | _(blank)_ |
+| `THRU_FAUCET_AMOUNT` | Amount per claim (base units; CLI caps at 10000/tx). | `10000` |
+| `FAUCET_URL` | Optional external HTTP faucet **gateway** to proxy to instead of the relayer. | _(blank)_ |
+| `FAUCET_RATE_LIMIT_PER_HOUR` | One-click faucet requests per IP per hour. | `3` |
 | `NEXT_PUBLIC_TOKEN_PROGRAM_ADDRESS` | Token program address (enables real token mint) | _(blank → preview)_ |
 | `NEXT_PUBLIC_NAME_SERVICE_PROGRAM_ADDRESS` | Name Service program address | _(blank → preview)_ |
 | `NEXT_PUBLIC_PROGRAM_LOADER_ADDRESS` | Program loader (enables Counter / Hello World deploy) | _(blank → preview)_ |

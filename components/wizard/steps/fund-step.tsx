@@ -143,7 +143,11 @@ export function FundStep() {
         <StepHeading
           eyebrow="Step 2"
           title="Fund your account"
-          description={`Thru's faucet is an on-chain program. The quickest way to claim ${thruConfig.network} test tokens is the Thru CLI — three commands, pre-filled with your key below. Your balance updates here automatically.`}
+          description={
+            gateway
+              ? `Tap the button to get free ${thruConfig.network} test tokens — we claim them from the on-chain faucet for you. Your balance updates automatically.`
+              : `Thru's faucet is an on-chain program. Claim ${thruConfig.network} test tokens with the Thru CLI below — three commands, pre-filled with your key. Your balance updates here automatically.`
+          }
         />
 
         {/* Balance */}
@@ -200,14 +204,14 @@ export function FundStep() {
           </CardContent>
         </Card>
 
-        {/* CLI claim steps */}
+        {/* CLI claim steps — primary when there's no one-click relayer, else a fallback */}
         {!isFunded && account && (
           <Card>
             <CardContent className="space-y-4 p-6">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2 text-sm font-semibold">
                   <Terminal className="size-4 text-primary" />
-                  Claim with the Thru CLI
+                  {gateway ? 'Prefer the command line?' : 'Claim with the Thru CLI'}
                 </div>
                 <Button variant="ghost" size="sm" onClick={() => setRevealKey((v) => !v)}>
                   {revealKey ? <EyeOff /> : <Eye />}
