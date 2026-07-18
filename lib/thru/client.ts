@@ -15,8 +15,10 @@ export function getThru(): Thru {
     cached = createThruClient({
       baseUrl: thruConfig.rpcUrl,
       transportOptions: {
-        // JSON is friendlier for browser debugging than the binary format.
-        useBinaryFormat: false,
+        // The Thru RPC only accepts the binary gRPC-web format; the JSON
+        // format is rejected with "invalid gRPC request content-type
+        // application/grpc-web+json".
+        useBinaryFormat: true,
         defaultTimeoutMs: 30_000,
       },
     });
