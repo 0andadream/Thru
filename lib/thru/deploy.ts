@@ -158,7 +158,8 @@ async function deployTokenOnChain(
   await ensureAccountExists(account, onPhase);
 
   const ticker = form.ticker.toUpperCase().slice(0, 8);
-  const seedHex = randomSeedHex();
+  // The token program requires a 32-byte (64 hex char) mint-derivation seed.
+  const seedHex = randomSeedHex(32);
   const mint = deriveMintAddress(thru, account.address, seedHex, thruConfig.tokenProgramAddress);
 
   // Prove the (empty) mint account slot so the program can initialize it.
