@@ -7,22 +7,25 @@ export interface AccountSnapshot {
   exists: boolean;
   /** Balance in base units. */
   balance: bigint;
+  /** Current transaction nonce (per-account, increments each transaction). */
+  nonce: bigint;
 }
 
 /**
- * Read an account's on-chain balance. A brand-new address that has never
- * received funds simply doesn't exist yet on chain — we treat that as a
- * zero balance rather than an error.
+ * Read an account's on-chain balance + nonce. A brand-new address that has
+ * never been created simply doesn't exist yet on chain — we treat that as a
+ * zero balance / zero nonce rather than an error.
  */
 export async function getAccountSnapshot(address: string): Promise<AccountSnapshot> {
   const thru = getThru();
   try {
     const account = await thru.accounts.get(address, { view: AccountView.META_ONLY });
     const balance = account.meta?.balance ?? 0n;
-    return { exists: true, balance: BigInt(balance) };
+    const nonce = account.meta?.nonce ?? 0n;
+    return { exists: true, balance: BigInt(balance), nonce: BigInt(nonce) };
   } catch (err) {
     if (isNotFound(err)) {
-      return { exists: false, balance: 0n };
+      return { exists: false, balance: 0n, nonce: 0n };
     }
     throw err;
   }

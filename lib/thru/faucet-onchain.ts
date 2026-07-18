@@ -114,6 +114,8 @@ export async function faucetWithdraw(
   const thru = getThru();
   const vaultBytes = decodeAddress(FAUCET_VAULT_ADDRESS);
   const selfBytes = publicKeyBytes(account);
+  // The nonce increments per transaction; use the account's current nonce.
+  const { nonce } = await getAccountSnapshot(account.address);
   const slot = await currentSlot();
 
   onPhase?.('signing');
@@ -130,7 +132,7 @@ export async function faucetWithdraw(
     },
     header: {
       fee: 0n,
-      nonce: 0n,
+      nonce,
       startSlot: slot,
       expiryAfter: 100,
       computeUnits: 300_000,
