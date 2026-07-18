@@ -239,8 +239,32 @@ export async function claimFaucetInBrowser(
   amount: bigint = BigInt(thruConfig.faucetAmount),
   onPhase?: (p: TxPhase) => void,
 ) {
-  await ensureAccountExists(account, onPhase);
-  await faucetWithdraw(account, amount, onPhase);
+  // Step 1: make sure the account exists on-chain. Don't hard-fail here — the
+  // withdraw below is authoritative (it reports -508 if the account really
+  // isn't there), which lets us attribute the error to the right step.
+  let createError: unknown;
+  try {
+    await ensureAccountExists(account, onPhase);
+  } catch (err) {
+    createError = err;
+  }
+
+  // Step 2: claim from the faucet.
+  try {
+    await faucetWithdraw(account, amount, onPhase);
+  } catch (err) {
+    if (
+      err instanceof VmError &&
+      err.code === VM_FEE_PAYER_DOES_NOT_EXIST &&
+      createError instanceof Error
+    ) {
+      throw new Error(`Account activation failed — ${createError.message}`);
+    }
+    if (err instanceof Error) {
+      throw new Error(`Faucet claim failed — ${err.message}`);
+    }
+    throw err;
+  }
 }
 
 export { VmError, VM_FEE_PAYER_DOES_NOT_EXIST };
