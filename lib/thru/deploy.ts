@@ -148,45 +148,67 @@ async function deployTokenOnChain(
   const { deriveMintAddress, createInitializeMintInstruction } = await import(
     '@thru/programs/token'
   );
-
-  onPhase?.('building');
-  const seedHex = randomSeedHex();
-  const mint = deriveMintAddress(
-    thru,
-    account.address,
-    seedHex,
-    thruConfig.tokenProgramAddress,
+  const { ensureAccountExists, submitWithNonce, currentSlot, buildAndSign } = await import(
+    './faucet-onchain'
   );
+  const { getAccountSnapshot } = await import('./account');
 
-  // Prove the (currently empty) mint account slot so the program can initialize it.
-  const stateProof = await thru.proofs.generate({ address: mint.address } as never);
+  // The creator/fee-payer account must exist on-chain first (fee 0).
+  onPhase?.('building');
+  await ensureAccountExists(account, onPhase);
+
+  const ticker = form.ticker.toUpperCase().slice(0, 8);
+  const seedHex = randomSeedHex();
+  const mint = deriveMintAddress(thru, account.address, seedHex, thruConfig.tokenProgramAddress);
+
+  // Prove the (empty) mint account slot so the program can initialize it.
+  const stateProof = await thru.proofs.generate({
+    address: mint.address,
+    proofType: 1 /* CREATING */,
+  } as never);
 
   const instruction = createInitializeMintInstruction({
     mintAccountBytes: mint.bytes,
     decimals: form.decimals,
     mintAuthorityBytes: publicKeyBytes(account),
     creatorBytes: publicKeyBytes(account),
-    ticker: form.ticker.toUpperCase().slice(0, 8),
+    ticker,
     seedHex,
     stateProof: stateProof.proof,
   });
 
-  const { signature } = await submitTransaction(account, {
-    program: thruConfig.tokenProgramAddress,
-    accounts: { readWrite: [mint.address] },
-    instructionData: instruction,
+  const { nonce } = await getAccountSnapshot(account.address);
+  const slot = await currentSlot();
+
+  await submitWithNonce(
+    nonce,
+    (n) =>
+      buildAndSign(account, {
+        program: thruConfig.tokenProgramAddress,
+        accounts: { readWrite: [mint.address] },
+        instructionData: instruction,
+        header: {
+          fee: 0n,
+          nonce: n,
+          startSlot: slot,
+          expiryAfter: 100,
+          computeUnits: 300_000,
+          memoryUnits: 10_000,
+          stateUnits: 10_000,
+          chainId: thruConfig.chainId,
+        },
+      }),
     onPhase,
-  });
+  );
 
   return {
     kind: 'token',
     label: form.name,
     metaAddress: mint.address,
     bufferAddress: undefined,
-    signature,
     onChain: true,
     details: {
-      Ticker: form.ticker.toUpperCase().slice(0, 8),
+      Ticker: ticker,
       Decimals: String(form.decimals),
       'Mint authority': account.address,
     },

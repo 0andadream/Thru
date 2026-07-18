@@ -267,4 +267,4 @@ export async function claimFaucetInBrowser(
   }
 }
 
-export { VmError, VM_FEE_PAYER_DOES_NOT_EXIST };
+export { VmError, VM_FEE_PAYER_DOES_NOT_EXIST, submitWithNonce, currentSlot, buildAndSign };

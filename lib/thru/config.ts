@@ -22,11 +22,13 @@ export const thruConfig = {
   faucetAmount: Number(process.env.NEXT_PUBLIC_FAUCET_AMOUNT ?? '1000'),
   faucetAmountLabel: process.env.NEXT_PUBLIC_FAUCET_AMOUNT_LABEL ?? 'test tokens',
 
-  // Program addresses — blank means the corresponding feature runs in a
-  // clearly-labelled preview / disabled state instead of failing hard.
-  tokenProgramAddress: process.env.NEXT_PUBLIC_TOKEN_PROGRAM_ADDRESS ?? '',
-  nameServiceProgramAddress:
-    process.env.NEXT_PUBLIC_NAME_SERVICE_PROGRAM_ADDRESS ?? '',
+  // Well-known native program addresses (from the official `thru` CLI config).
+  tokenProgramAddress:
+    process.env.NEXT_PUBLIC_TOKEN_PROGRAM_ADDRESS ??
+    'taAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAKqq',
+  // Name-service registration needs its real instruction wired before it can
+  // submit on-chain; left blank keeps the Name step in preview until then.
+  nameServiceProgramAddress: process.env.NEXT_PUBLIC_NAME_SERVICE_PROGRAM_ADDRESS ?? '',
   programLoaderAddress: process.env.NEXT_PUBLIC_PROGRAM_LOADER_ADDRESS ?? '',
 } as const;
 
