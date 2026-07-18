@@ -8,13 +8,24 @@ import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/components/ui/toast';
 import { useWizard } from '../wizard-context';
 import { AddressRow, StepHeading, StepMotion, StepNav } from '../step-parts';
-import { requestFaucet } from '@/lib/thru/faucet';
 import { formatBalance, getAccountSnapshot, waitForFunds } from '@/lib/thru/account';
+import { claimFaucetInBrowser } from '@/lib/thru/faucet-onchain';
 import { accountUrl } from '@/lib/thru/explorer';
 import { thruConfig } from '@/lib/thru/config';
 import { popSuccess } from '@/lib/confetti';
+import type { TxPhase } from '@/lib/thru/types';
 
 type Phase = 'idle' | 'requesting' | 'waiting' | 'funded' | 'error';
+
+const TX_LABEL: Record<TxPhase, string> = {
+  idle: 'Claiming…',
+  building: 'Preparing your account…',
+  signing: 'Signing locally…',
+  submitting: 'Submitting to the network…',
+  confirming: 'Confirming on-chain…',
+  confirmed: 'Confirmed!',
+  error: 'Something went wrong',
+};
 
 export function FundStep() {
   const { account, funded, dispatch } = useWizard();
@@ -23,6 +34,7 @@ export function FundStep() {
   const [balance, setBalance] = React.useState<bigint>(0n);
   const [message, setMessage] = React.useState<string>('');
   const [checking, setChecking] = React.useState(false);
+  const [txPhase, setTxPhase] = React.useState<TxPhase>('idle');
   const abortRef = React.useRef<AbortController | null>(null);
 
   const isFunded = phase === 'funded' || funded;
@@ -65,20 +77,13 @@ export function FundStep() {
   async function handleFaucet() {
     if (!account) return;
     setPhase('requesting');
+    setTxPhase('building');
     setMessage('');
     try {
-      const res = await requestFaucet(account.address);
-      if (!res.ok) {
-        setPhase('error');
-        setMessage(res.message);
-        toast({
-          variant: res.manual ? 'warning' : 'error',
-          title: res.manual ? 'Faucet not configured' : 'Faucet request failed',
-          description: res.message,
-        });
-        return;
-      }
-      toast({ variant: 'success', title: 'Faucet request sent', description: res.message });
+      // Fully client-side claim: create the account if needed, then withdraw
+      // from the on-chain faucet to it. No server / operator / CLI required.
+      await claimFaucetInBrowser(account, BigInt(thruConfig.faucetAmount), setTxPhase);
+
       setPhase('waiting');
       abortRef.current = new AbortController();
       const snap = await waitForFunds(account.address, {
@@ -90,12 +95,14 @@ export function FundStep() {
       if (snap.balance > 0n) markFunded();
       else {
         setPhase('error');
-        setMessage('Tokens have not arrived yet. The faucet may be busy — try again in a moment.');
+        setMessage('The claim went through but the balance has not updated yet — give it a moment and press refresh.');
       }
     } catch (err) {
       if ((err as Error)?.name === 'AbortError') return;
       setPhase('error');
-      setMessage(err instanceof Error ? err.message : 'Unknown error');
+      const msg = err instanceof Error ? err.message : 'Unknown error';
+      setMessage(`${msg} — please try again in a moment.`);
+      toast({ variant: 'error', title: 'Faucet claim failed', description: msg });
     }
   }
 
@@ -107,7 +114,7 @@ export function FundStep() {
         <StepHeading
           eyebrow="Step 2"
           title="Fund your account"
-          description={`Get free ${thruConfig.network} test tokens to pay for transactions — we claim them from the on-chain faucet for you. Your balance updates automatically.`}
+          description={`Get free ${thruConfig.network} test tokens to pay for transactions. One tap claims them from the on-chain faucet, right in your browser — no wallet, no server, no command line.`}
         />
 
         <Card className={isFunded ? 'border-success' : undefined}>
@@ -144,9 +151,10 @@ export function FundStep() {
                 loading={busy}
                 disabled={busy}
               >
-                {phase === 'waiting' ? (
+                {busy ? (
                   <>
-                    <Loader2 className="animate-spin" /> Waiting for tokens…
+                    <Loader2 className="animate-spin" />{' '}
+                    {phase === 'waiting' ? 'Waiting for tokens…' : TX_LABEL[txPhase]}
                   </>
                 ) : (
                   <>

@@ -20,16 +20,14 @@ private keys never touch a server.
   2. **Create Account** — Ed25519 keypair generated in the browser, public
      address shown, one-click JSON keystore download + copy, repeated backup
      warnings, and **optional passkey** registration (WebAuthn).
-  3. **Get Tokens** — Thru's faucet is an **on-chain** program (a fee payer
-     claims tokens for a recipient). Two modes:
-     - **One-click (recommended for public deploys):** configure a **built-in
-       relayer** — give the server the official `thru` CLI + a funded operator
-       key and the user just taps a button; the server runs `thru faucet
-       withdraw <userAddress> <amount>` paying the fee from the operator. (Or
-       point `FAUCET_URL` at your own HTTP faucet gateway.)
-     - **Guided CLI (zero server setup):** the step shows the real `thru` CLI
-       commands pre-filled with the user's key.
-     Either way the step **auto-detects the balance landing** by polling RPC.
+  3. **Get Tokens** — **one tap, fully in the browser, zero server setup.**
+     Thru's faucet is an on-chain program and network fees are 0, so the app
+     creates the account (if needed) and submits a faucet-withdraw transaction
+     directly from the browser — no wallet, operator, or CLI. The
+     faucet-withdraw instruction was reproduced from the official `thru` CLI
+     and is verified to match its output byte-for-byte. Balance auto-updates on
+     arrival. (An optional server-side relayer / `FAUCET_URL` gateway is still
+     supported for networks that charge fees or gate the faucet.)
   4. **Deploy Program** — choose **Simple Token**, **Counter**, or **Hello
      World**; deploy in one click and see the resulting **Meta + Buffer**
      addresses.

@@ -122,6 +122,12 @@ export function CreateAccountStep() {
             ) : (
               <AddressRow label="Public address (safe to share)" value={account.address} href={accountUrl(account.address)} />
             )}
+            {account && !generating && (
+              <p className="text-xs text-muted-foreground">
+                This address won&apos;t appear on the explorer yet — it goes live on-chain the moment
+                you get your first tokens in the next step.
+              </p>
+            )}
           </CardContent>
         </Card>
 

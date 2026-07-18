@@ -9,8 +9,7 @@
 export const thruConfig = {
   rpcUrl: process.env.NEXT_PUBLIC_THRU_RPC_URL ?? 'https://rpc.alphanet.thru.org',
   network: process.env.NEXT_PUBLIC_THRU_NETWORK ?? 'Alphanet',
-  explorerUrl:
-    process.env.NEXT_PUBLIC_THRU_EXPLORER_URL ?? 'https://explorer.alphanet.thru.org',
+  explorerUrl: process.env.NEXT_PUBLIC_THRU_EXPLORER_URL ?? 'https://scan.thru.org',
   chainId: Number(process.env.NEXT_PUBLIC_THRU_CHAIN_ID ?? '1'),
 
   docsUrl: process.env.NEXT_PUBLIC_THRU_DOCS_URL ?? 'https://docs.thru.org',
