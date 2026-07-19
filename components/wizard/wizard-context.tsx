@@ -65,7 +65,18 @@ function reducer(state: WizardState, action: Action): WizardState {
     case 'back':
       return { ...state, stepIndex: clamp(state.stepIndex - 1) };
     case 'setAccount':
-      return { ...state, account: action.account };
+      // A new account invalidates everything downstream — start it clean so a
+      // freshly-generated wallet never inherits the old wallet's funded /
+      // deployed / named state.
+      return {
+        ...state,
+        account: action.account,
+        keyBackedUp: false,
+        passkey: null,
+        funded: false,
+        deployment: null,
+        name: null,
+      };
     case 'setBackedUp':
       return { ...state, keyBackedUp: action.value };
     case 'setPasskey':

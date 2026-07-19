@@ -38,29 +38,48 @@ export function FundStep() {
   const [txPhase, setTxPhase] = React.useState<TxPhase>('idle');
   const abortRef = React.useRef<AbortController | null>(null);
 
-  const isFunded = phase === 'funded' || funded;
+  // "Funded" always reflects the real on-chain balance (never a stale flag).
+  const isFunded = funded;
+  const fundedRef = React.useRef(funded);
+  React.useEffect(() => {
+    fundedRef.current = funded;
+  }, [funded]);
 
-  // Poll balance while unfunded so the step advances the moment tokens land.
+  // Verify the real balance on entry, then poll while unfunded so the step
+  // advances the moment tokens land.
   React.useEffect(() => {
     if (!account) return;
-    void refreshBalance();
+    void refreshBalance(true);
     const timer = setInterval(() => {
-      if (!isFunded) void refreshBalance(true);
+      if (!fundedRef.current) void refreshBalance(true, true);
     }, 6000);
     return () => {
       clearInterval(timer);
       abortRef.current?.abort();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [account?.address]);
 
-  async function refreshBalance(silent = false) {
+  async function refreshBalance(silent = false, celebrate = false) {
     if (!account) return;
     if (!silent) setChecking(true);
     try {
       const snap = await getAccountSnapshot(account.address);
       setBalance(snap.balance);
-      if (snap.balance > 0n && !isFunded) markFunded();
+      const nowFunded = snap.balance > 0n;
+      if (nowFunded !== fundedRef.current) {
+        fundedRef.current = nowFunded;
+        dispatch({ type: 'setFunded', value: nowFunded });
+        if (nowFunded) {
+          setPhase('funded');
+          if (celebrate) {
+            popSuccess(0.5, 0.45);
+            toast({ variant: 'success', title: 'Tokens received!', description: 'Your account is funded.' });
+          }
+        } else if (phase === 'funded') {
+          setPhase('idle');
+        }
+      }
     } catch {
       /* RPC hiccup — leave state as-is */
     } finally {
@@ -69,6 +88,7 @@ export function FundStep() {
   }
 
   function markFunded() {
+    fundedRef.current = true;
     setPhase('funded');
     dispatch({ type: 'setFunded', value: true });
     popSuccess(0.5, 0.45);
