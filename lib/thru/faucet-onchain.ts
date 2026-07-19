@@ -23,8 +23,13 @@ import type { ThruAccount, TxPhase } from './types';
  */
 const FAUCET_VAULT_ADDRESS = thruConfig.faucetVaultAddress;
 
-// Native "system" program id used by the faucet-withdraw instruction.
-const SYSTEM_PROGRAM = new Uint8Array(32);
+// Official faucet program id (FAUCET_PROGRAM in Thru's txn_tools.rs):
+// 31 zero bytes followed by 0xFA.
+const FAUCET_PROGRAM = (() => {
+  const p = new Uint8Array(32);
+  p[31] = 0xfa;
+  return p;
+})();
 // Native account-creation program id (all zero except the last byte).
 const CREATE_PROGRAM = (() => {
   const p = new Uint8Array(32);
@@ -223,7 +228,7 @@ export async function faucetWithdraw(
     nonce,
     (n) =>
       buildAndSign(account, {
-        program: SYSTEM_PROGRAM,
+        program: FAUCET_PROGRAM,
         // Self-recipient: only the vault is an extra account; the recipient is
         // the fee payer (index 0). buildAndSign sorts accounts like the CLI.
         accounts: { readWrite: [vaultBytes] },
