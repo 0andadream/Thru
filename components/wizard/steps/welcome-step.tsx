@@ -52,7 +52,7 @@ export function WelcomeStep() {
               <ArrowRight className="transition-transform group-hover:translate-x-0.5" />
             </Button>
             <Button variant="outline" size="lg" asChild className="w-full sm:w-auto">
-              <a href="https://docs.thru.org" target="_blank" rel="noreferrer">
+              <a href={thruConfig.docsUrl} target="_blank" rel="noreferrer">
                 Read the docs
               </a>
             </Button>

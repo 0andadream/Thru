@@ -1,6 +1,6 @@
 'use client';
 
-import { BookOpen, Compass, Github } from 'lucide-react';
+import { BookOpen, Compass } from 'lucide-react';
 import { Logo } from './logo';
 import { ThemeToggle } from './theme-toggle';
 import { Badge } from '@/components/ui/badge';
@@ -8,9 +8,8 @@ import { Button } from '@/components/ui/button';
 import { thruConfig } from '@/lib/thru/config';
 
 const LINKS = [
-  { href: 'https://docs.thru.org', label: 'Docs', icon: BookOpen },
+  { href: thruConfig.docsUrl, label: 'Docs', icon: BookOpen },
   { href: thruConfig.explorerUrl, label: 'Explorer', icon: Compass },
-  { href: 'https://github.com/thru', label: 'GitHub', icon: Github },
 ];
 
 export function SiteHeader() {

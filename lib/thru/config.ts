@@ -12,11 +12,8 @@ export const thruConfig = {
   explorerUrl: process.env.NEXT_PUBLIC_THRU_EXPLORER_URL ?? 'https://scan.thru.org',
   chainId: Number(process.env.NEXT_PUBLIC_THRU_CHAIN_ID ?? '1'),
 
-  docsUrl: process.env.NEXT_PUBLIC_THRU_DOCS_URL ?? 'https://docs.thru.org',
-  // The Thru faucet is an on-chain program claimed with the `thru` CLI.
-  devkitDocsUrl:
-    process.env.NEXT_PUBLIC_THRU_DEVKIT_DOCS_URL ??
-    'https://docs.thru.org/program-development/setting-up-thru-devkit',
+  docsUrl: process.env.NEXT_PUBLIC_THRU_DOCS_URL ?? 'https://thru.org/docs/',
+  devkitDocsUrl: process.env.NEXT_PUBLIC_THRU_DEVKIT_DOCS_URL ?? 'https://thru.org/docs/',
 
   // Amount to request per faucet withdraw (base units; CLI caps at 10000/tx).
   faucetAmount: Number(process.env.NEXT_PUBLIC_FAUCET_AMOUNT ?? '10000'),

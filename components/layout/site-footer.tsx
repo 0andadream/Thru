@@ -20,14 +20,11 @@ export function SiteFooter() {
         <div className="flex flex-col items-center justify-between gap-3 text-xs text-muted-foreground sm:flex-row">
           <p className="font-mono">Built for the Thru community · Open-source onboarding wizard</p>
           <div className="flex items-center gap-4 font-mono">
-            <a href="https://docs.thru.org" target="_blank" rel="noreferrer" className="hover:text-primary">
+            <a href={thruConfig.docsUrl} target="_blank" rel="noreferrer" className="hover:text-primary">
               Docs
             </a>
             <a href={thruConfig.explorerUrl} target="_blank" rel="noreferrer" className="hover:text-primary">
               Explorer
-            </a>
-            <a href="https://github.com/thru" target="_blank" rel="noreferrer" className="hover:text-primary">
-              GitHub
             </a>
           </div>
         </div>
