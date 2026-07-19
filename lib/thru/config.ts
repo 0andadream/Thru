@@ -38,7 +38,6 @@ export const thruConfig = {
   nameServiceProgramAddress:
     process.env.NEXT_PUBLIC_NAME_SERVICE_PROGRAM_ADDRESS ??
     'taAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAUF',
-  programLoaderAddress: process.env.NEXT_PUBLIC_PROGRAM_LOADER_ADDRESS ?? '',
 } as const;
 
 export function isTokenProgramConfigured(): boolean {
@@ -47,8 +46,4 @@ export function isTokenProgramConfigured(): boolean {
 
 export function isNameServiceConfigured(): boolean {
   return thruConfig.nameServiceProgramAddress.trim().length > 0;
-}
-
-export function isProgramLoaderConfigured(): boolean {
-  return thruConfig.programLoaderAddress.trim().length > 0;
 }

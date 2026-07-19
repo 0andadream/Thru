@@ -28,9 +28,8 @@ private keys never touch a server.
      and is verified to match its output byte-for-byte. Balance auto-updates on
      arrival. (An optional server-side relayer / `FAUCET_URL` gateway is still
      supported for networks that charge fees or gate the faucet.)
-  4. **Deploy Program** — choose **Simple Token**, **Counter**, or **Hello
-     World**; deploy in one click and see the resulting **Meta + Buffer**
-     addresses.
+  4. **Launch Token** — create a real token mint, owner token account, and
+     initial supply in one guided action.
   5. **Claim a Name** — root name with auto-suggestions, subdomain
      (`alice.yourname`), and optional URL / Twitter / linked-pubkey records.
   6. **Success Dashboard** — summary of everything created, explorer links,
@@ -95,7 +94,6 @@ Everything network-specific is read from environment variables — see
 | `FAUCET_RATE_LIMIT_PER_HOUR` | One-click faucet requests per IP per hour. | `3` |
 | `NEXT_PUBLIC_TOKEN_PROGRAM_ADDRESS` | Token program address (enables real token mint) | _(blank → preview)_ |
 | `NEXT_PUBLIC_NAME_SERVICE_PROGRAM_ADDRESS` | Name Service program address | _(blank → preview)_ |
-| `NEXT_PUBLIC_PROGRAM_LOADER_ADDRESS` | Program loader (enables Counter / Hello World deploy) | _(blank → preview)_ |
 
 ### On-chain vs. preview mode
 
@@ -108,9 +106,7 @@ network-specific **program address** that isn't hard-coded in the SDK:
   `FAUCET_URL` only if you also run an HTTP faucet gateway.
 - **Simple Token deploy** — a **real on-chain token mint** (via
   `@thru/programs/token`) as soon as `NEXT_PUBLIC_TOKEN_PROGRAM_ADDRESS` is set.
-- **Counter / Hello World deploy** and **Name Service** — real once their
-  program addresses (and, for programs, compiled binaries in
-  [`public/programs/`](./public/programs/README.md)) are configured.
+- **Name Service** — real once its program address is configured.
 
 When a required address is not configured, that step runs in a clearly-labelled
 **Preview** mode: it uses the SDK's **real** address-derivation primitives to
@@ -178,7 +174,6 @@ lib/
     explorer.ts         # explorer URL helpers
     types.ts            # shared types
 
-public/programs/        # drop compiled program binaries here (see README)
 ```
 
 ---

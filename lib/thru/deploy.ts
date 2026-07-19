@@ -4,7 +4,6 @@ import { deriveProgramAddress } from '@thru/sdk';
 import { bytesToHex, hexToBytes } from '@/lib/utils';
 import { getThru } from './client';
 import {
-  isProgramLoaderConfigured,
   isTokenProgramConfigured,
   thruConfig,
 } from './config';
@@ -36,24 +35,6 @@ export const DEPLOY_OPTIONS: DeployOption[] = [
     onChainAvailable: isTokenProgramConfigured,
     needsTokenForm: true,
   },
-  {
-    kind: 'counter',
-    label: 'Counter',
-    tagline: 'A classic counter program',
-    glyph: '🔢',
-    description:
-      'The blockchain "hello world" — a program that stores a number you can increment. Perfect for learning how programs deploy.',
-    onChainAvailable: isProgramLoaderConfigured,
-  },
-  {
-    kind: 'hello-world',
-    label: 'Hello World',
-    tagline: 'Minimal on-chain program',
-    glyph: '👋',
-    description:
-      'The smallest possible program: it logs a greeting when invoked. See how a program gets a Meta and Buffer address on Thru.',
-    onChainAvailable: isProgramLoaderConfigured,
-  },
 ];
 
 export function getDeployOption(kind: DeployKind): DeployOption {
@@ -67,7 +48,7 @@ function randomSeedHex(bytes = 16): string {
 }
 
 /**
- * Derive the deterministic Meta + Buffer addresses a deployment WOULD occupy,
+ * Derive the deterministic mint + token-account preview addresses,
  * using the SDK's real address-derivation primitives. Used for the preview
  * path (when no on-chain program/loader is configured) so users still see and
  * can copy genuine, reproducible addresses.
@@ -118,8 +99,7 @@ export async function deploy(
     return deployTokenOnChain(account, opts.token, opts.onPhase);
   }
 
-  // Real on-chain program deploy would go here once a loader + binary exist.
-  // Until then, every path resolves to a genuine derived-address preview.
+  // Fall back to a derived-address preview when the token program is disabled.
   opts.onPhase?.('building');
   const { metaAddress, bufferAddress, seedHex } = derivePreviewDeployment(account, kind);
   // A tiny pause so the UI's progress states read naturally.

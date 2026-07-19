@@ -73,13 +73,13 @@ export function DeployStep() {
       <div className="mx-auto max-w-2xl space-y-6">
         <StepHeading
           eyebrow="Step 3"
-          title="Deploy your first program"
-          description="Pick something to launch on Thru. Each one produces real on-chain addresses you can explore."
+          title="Launch your first token"
+          description="Create a real token mint and initial supply on Thru, then inspect both on-chain accounts."
         />
 
         {!deployment ? (
           <>
-            <div className="grid gap-3 sm:grid-cols-3">
+            <div className="grid gap-3">
               {DEPLOY_OPTIONS.map((o) => {
                 const active = selected === o.kind;
                 const onChain = o.onChainAvailable();
@@ -147,8 +147,8 @@ export function DeployStep() {
                 {!option.onChainAvailable() && (
                   <p className="rounded-sm border border-warning/40 bg-warning/10 p-3 text-xs text-muted-foreground">
                     <span className="font-semibold text-warning">Preview mode.</span> This network
-                    build has no {selected === 'token' ? 'token program' : 'program loader'} address
-                    configured, so we&apos;ll generate the genuine derived Meta &amp; Buffer addresses
+                    build has no token program address configured, so we&apos;ll generate the genuine
+                    derived Mint &amp; Token Account addresses
                     without submitting a transaction. Set the address in your environment to enable a
                     real on-chain deploy.
                   </p>
@@ -204,13 +204,13 @@ export function DeployStep() {
 
               <div className="space-y-2">
                 <AddressRow
-                  label={deployment.kind === 'token' ? 'Mint (Meta) address' : 'Program Meta address'}
+                  label="Mint address"
                   value={deployment.metaAddress}
                   href={accountUrl(deployment.metaAddress)}
                 />
                 {deployment.bufferAddress && (
                   <AddressRow
-                    label={deployment.kind === 'token' ? 'Your token account (mint destination)' : 'Buffer address'}
+                    label="Your token account (mint destination)"
                     value={deployment.bufferAddress}
                     href={accountUrl(deployment.bufferAddress)}
                   />

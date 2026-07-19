@@ -26,7 +26,7 @@ export interface PasskeyInfo {
   createdAt: number;
 }
 
-export type DeployKind = 'token' | 'counter' | 'hello-world';
+export type DeployKind = 'token';
 
 export interface DeployResult {
   kind: DeployKind;
