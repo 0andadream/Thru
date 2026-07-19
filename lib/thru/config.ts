@@ -31,9 +31,9 @@ export const thruConfig = {
   tokenProgramAddress:
     process.env.NEXT_PUBLIC_TOKEN_PROGRAM_ADDRESS ??
     'taAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAKqq',
-  // Name-service registration needs its real instruction wired before it can
-  // submit on-chain; left blank keeps the Name step in preview until then.
-  nameServiceProgramAddress: process.env.NEXT_PUBLIC_NAME_SERVICE_PROGRAM_ADDRESS ?? '',
+  nameServiceProgramAddress:
+    process.env.NEXT_PUBLIC_NAME_SERVICE_PROGRAM_ADDRESS ??
+    'taAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAUF',
   programLoaderAddress: process.env.NEXT_PUBLIC_PROGRAM_LOADER_ADDRESS ?? '',
 } as const;
 

@@ -1,8 +1,12 @@
 'use client';
 
-import { deriveAddress, deriveProgramAddress } from '@thru/sdk';
-import { isNameServiceConfigured, thruConfig } from './config';
-import { submitTransaction } from './transactions';
+import { deriveAddress } from '@thru/sdk';
+import { isNameServiceConfigured } from './config';
+import {
+  deriveDomainAddress,
+  deriveRegistrarAddress,
+  registerNameOnChain,
+} from './nameservice-onchain';
 import type { NameRecord, NameResult, ThruAccount, TxPhase } from './types';
 
 // 1–32 chars, lowercase alphanumeric + hyphen, no leading/trailing hyphen.
@@ -24,30 +28,27 @@ export function suggestRoots(seed: string): string[] {
   ];
 }
 
-function nameAddress(label: string, kind: 'root' | 'sub'): string {
-  const seedStr = `thru-name/${kind}/${label.toLowerCase()}`;
-  // Hash the (possibly long) label into a fixed 32-byte value first so it fits
-  // deriveProgramAddress's 32-byte seed limit.
-  const hashed = deriveAddress([new TextEncoder().encode(seedStr)]);
-  if (isNameServiceConfigured()) {
-    // Real program-derived address under the Name Service program.
-    return deriveProgramAddress({
-      programAddress: thruConfig.nameServiceProgramAddress,
-      seed: hashed.bytes,
-    }).address;
-  }
-  // Preview mode: the hashed address is itself a genuine, reproducible address.
-  return hashed.address;
+/** Preview-mode stand-in address when the name service isn't configured. */
+function previewAddress(label: string): string {
+  return deriveAddress([new TextEncoder().encode(`thru-name/${label.toLowerCase()}`)]).address;
 }
 
 /**
- * Derive the on-chain addresses for a root name and a subdomain. Uses real
- * address derivation so the addresses are genuine and reproducible.
+ * Derive the on-chain addresses for a root name and a subdomain. When the name
+ * service is configured these are the genuine program-derived registrar/domain
+ * addresses; otherwise reproducible preview stand-ins.
  */
 export function deriveNameAddresses(root: string, subdomain: string) {
+  if (isNameServiceConfigured()) {
+    const rootAddress = deriveRegistrarAddress(root);
+    return {
+      rootAddress,
+      subdomainAddress: deriveDomainAddress(rootAddress, subdomain),
+    };
+  }
   return {
-    rootAddress: nameAddress(root, 'root'),
-    subdomainAddress: nameAddress(`${subdomain}.${root}`, 'sub'),
+    rootAddress: previewAddress(root),
+    subdomainAddress: previewAddress(`${subdomain}.${root}`),
   };
 }
 
@@ -71,26 +72,21 @@ export async function claimName(
   const { rootAddress, subdomainAddress } = deriveNameAddresses(root, subdomain);
 
   if (isNameServiceConfigured()) {
-    params.onPhase?.('building');
-    // Encode the records as instruction data. The exact wire format is defined
-    // by the Name Service program; we pack a compact JSON payload here.
-    const payload = new TextEncoder().encode(
-      JSON.stringify({ op: 'register', root, subdomain, records: params.records }),
+    // Real on-chain registration: create the root registrar, then the subdomain.
+    const { registrar, domain } = await registerNameOnChain(
+      account,
+      root,
+      subdomain,
+      params.onPhase,
     );
-    const { signature } = await submitTransaction(account, {
-      program: thruConfig.nameServiceProgramAddress,
-      accounts: { readWrite: [rootAddress, subdomainAddress] },
-      instructionData: payload,
-      onPhase: params.onPhase,
-    });
+    params.onPhase?.('confirmed');
     return {
       root,
       subdomain,
       fullName,
-      rootAddress,
-      subdomainAddress,
+      rootAddress: registrar,
+      subdomainAddress: domain,
       records: params.records,
-      signature,
       onChain: true,
     };
   }
