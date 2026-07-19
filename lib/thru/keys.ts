@@ -1,6 +1,7 @@
 'use client';
 
 import { keys } from '@thru/sdk';
+import { encodeAddress } from '@thru/sdk/helpers';
 import { bytesToHex, hexToBytes } from '@/lib/utils';
 import { thruConfig } from './config';
 import type { ThruAccount, ThruKeystoreFile } from './types';
@@ -16,6 +17,23 @@ export async function generateAccount(): Promise<ThruAccount> {
     address: kp.address,
     publicKeyHex: bytesToHex(kp.publicKey),
     privateKeyHex: bytesToHex(kp.privateKey),
+    createdAt: Date.now(),
+  };
+}
+
+/** Restore an account from a 32-byte Ed25519 private key. */
+export async function importAccountFromPrivateKey(value: string): Promise<ThruAccount> {
+  const privateKeyHex = value.trim().replace(/^0x/i, '').replace(/\s+/g, '').toLowerCase();
+  if (!/^[0-9a-f]{64}$/.test(privateKeyHex)) {
+    throw new Error('Enter a valid 64-character hexadecimal private key.');
+  }
+
+  const privateKey = hexToBytes(privateKeyHex);
+  const publicKey = await keys.fromPrivateKey(privateKey);
+  return {
+    address: encodeAddress(publicKey),
+    publicKeyHex: bytesToHex(publicKey),
+    privateKeyHex,
     createdAt: Date.now(),
   };
 }

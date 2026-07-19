@@ -11,15 +11,22 @@ import {
   Loader2,
   RefreshCw,
   ShieldCheck,
+  Upload,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
 import { CopyButton } from '@/components/ui/copy-button';
 import { useToast } from '@/components/ui/toast';
 import { useWizard } from '../wizard-context';
 import { AddressRow, StepHeading, StepMotion, StepNav } from '../step-parts';
-import { downloadKeystore, generateAccount, privateKeyText } from '@/lib/thru/keys';
+import {
+  downloadKeystore,
+  generateAccount,
+  importAccountFromPrivateKey,
+  privateKeyText,
+} from '@/lib/thru/keys';
 import { createPasskey, isPasskeySupported } from '@/lib/thru/passkey';
 import { accountUrl } from '@/lib/thru/explorer';
 import { popSuccess } from '@/lib/confetti';
@@ -31,6 +38,10 @@ export function CreateAccountStep() {
   const [revealed, setRevealed] = React.useState(false);
   const [downloaded, setDownloaded] = React.useState(false);
   const [passkeyBusy, setPasskeyBusy] = React.useState(false);
+  const [showImport, setShowImport] = React.useState(false);
+  const [importValue, setImportValue] = React.useState('');
+  const [importVisible, setImportVisible] = React.useState(false);
+  const [importing, setImporting] = React.useState(false);
   const passkeySupported = React.useMemo(() => isPasskeySupported(), []);
 
   React.useEffect(() => {
@@ -50,6 +61,8 @@ export function CreateAccountStep() {
       dispatch({ type: 'setAccount', account: acct });
       dispatch({ type: 'setBackedUp', value: false });
       dispatch({ type: 'setPasskey', passkey: null });
+      setShowImport(false);
+      setImportValue('');
       popSuccess(0.5, 0.4);
     } catch (err) {
       toast({
@@ -59,6 +72,34 @@ export function CreateAccountStep() {
       });
     } finally {
       setGenerating(false);
+    }
+  }
+
+  async function handleImport() {
+    setImporting(true);
+    try {
+      const acct = await importAccountFromPrivateKey(importValue);
+      dispatch({ type: 'setAccount', account: acct });
+      // A returning user necessarily already possesses this key.
+      dispatch({ type: 'setBackedUp', value: true });
+      dispatch({ type: 'setPasskey', passkey: null });
+      setDownloaded(false);
+      setRevealed(false);
+      setImportValue('');
+      setShowImport(false);
+      toast({
+        variant: 'success',
+        title: 'Account restored',
+        description: `Loaded ${acct.address}. The private key stayed in this browser.`,
+      });
+    } catch (err) {
+      toast({
+        variant: 'error',
+        title: 'Could not import account',
+        description: err instanceof Error ? err.message : 'Invalid private key.',
+      });
+    } finally {
+      setImporting(false);
     }
   }
 
@@ -97,9 +138,79 @@ export function CreateAccountStep() {
       <div className="mx-auto max-w-2xl space-y-6">
         <StepHeading
           eyebrow="Step 1"
-          title="Create your Thru account"
-          description="Your keys are generated right here in your browser and never sent anywhere. Back them up before moving on."
+          title="Set up your Thru account"
+          description="Create a new account or restore an existing one. Keys stay in your browser and are never sent to the server."
         />
+
+        <div className="grid gap-3 sm:grid-cols-2">
+          <Button
+            variant={!showImport ? 'default' : 'outline'}
+            size="lg"
+            onClick={handleGenerate}
+            disabled={generating || importing}
+          >
+            {generating ? <Loader2 className="animate-spin" /> : <KeyRound />}
+            Create new account
+          </Button>
+          <Button
+            variant={showImport ? 'default' : 'outline'}
+            size="lg"
+            onClick={() => setShowImport((value) => !value)}
+            disabled={generating || importing}
+          >
+            <Upload />
+            Import private key
+          </Button>
+        </div>
+
+        {showImport && (
+          <Card className="border-warning/40">
+            <CardContent className="space-y-4 p-5">
+              <div>
+                <p className="font-semibold">Restore an existing account</p>
+                <p className="text-sm text-muted-foreground">
+                  Enter the 64-character hexadecimal private key from your Thru backup.
+                  It is processed locally and never uploaded.
+                </p>
+              </div>
+              <div className="relative">
+                <Input
+                  type={importVisible ? 'text' : 'password'}
+                  value={importValue}
+                  onChange={(event) => setImportValue(event.target.value)}
+                  placeholder="64-character private key"
+                  autoComplete="off"
+                  spellCheck={false}
+                  className="pr-12 font-mono"
+                  onKeyDown={(event) => {
+                    if (event.key === 'Enter' && importValue.trim() && !importing) {
+                      void handleImport();
+                    }
+                  }}
+                />
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="absolute right-1 top-1/2 -translate-y-1/2"
+                  onClick={() => setImportVisible((value) => !value)}
+                  aria-label={importVisible ? 'Hide private key' : 'Show private key'}
+                >
+                  {importVisible ? <EyeOff /> : <Eye />}
+                </Button>
+              </div>
+              <Button
+                variant="gradient"
+                className="w-full"
+                onClick={handleImport}
+                loading={importing}
+                disabled={!importValue.trim() || importing}
+              >
+                <Upload /> Restore account
+              </Button>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Public key / address */}
         <Card>
@@ -109,10 +220,12 @@ export function CreateAccountStep() {
                 <KeyRound className="size-4 text-primary" />
                 Your public address
               </div>
-              <Button variant="ghost" size="sm" onClick={handleGenerate} disabled={generating}>
-                {generating ? <Loader2 className="animate-spin" /> : <RefreshCw />}
-                Regenerate
-              </Button>
+              {!showImport && (
+                <Button variant="ghost" size="sm" onClick={handleGenerate} disabled={generating}>
+                  {generating ? <Loader2 className="animate-spin" /> : <RefreshCw />}
+                  Regenerate
+                </Button>
+              )}
             </div>
 
             {generating || !account ? (
@@ -124,8 +237,8 @@ export function CreateAccountStep() {
             )}
             {account && !generating && (
               <p className="text-xs text-muted-foreground">
-                This address won&apos;t appear on the explorer yet — it goes live on-chain the moment
-                you get your first tokens in the next step.
+                A new address appears on the explorer after its first on-chain transaction.
+                Restored accounts retain their existing Alphanet history.
               </p>
             )}
           </CardContent>
@@ -142,9 +255,9 @@ export function CreateAccountStep() {
                     Your private key is the master key to this account.
                   </p>
                   <p className="text-muted-foreground">
-                    Anyone who sees it can take everything. Never share it, never paste it into a
-                    website, and never store it in a screenshot or chat. Thru Onboard cannot recover
-                    it for you.
+                    Anyone who sees it controls the account. Never share it or store it in a
+                    screenshot or chat. Only enter it in software you trust; Thru Onboard processes
+                    it locally and cannot recover it for you.
                   </p>
                 </div>
               </div>

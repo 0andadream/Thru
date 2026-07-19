@@ -12,10 +12,11 @@ web packages. Keys are generated and transactions are signed in the browser.
 
 ## What the app does
 
-1. **Create an account**
-   - Generates an Ed25519 keypair in the browser.
+1. **Create or restore an account**
+   - Generates a new Ed25519 keypair in the browser, or restores a returning
+     user's account from a 64-character hexadecimal private key.
    - Shows the Thru `ta...` address.
-   - Requires the user to download a JSON key backup before continuing.
+   - Requires new users to download a JSON key backup before continuing.
    - Offers optional WebAuthn passkey registration.
 2. **Claim test THRU**
    - Creates the account on-chain when necessary.
