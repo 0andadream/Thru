@@ -19,8 +19,13 @@ export const thruConfig = {
     'https://docs.thru.org/program-development/setting-up-thru-devkit',
 
   // Amount to request per faucet withdraw (base units; CLI caps at 10000/tx).
-  faucetAmount: Number(process.env.NEXT_PUBLIC_FAUCET_AMOUNT ?? '1000'),
+  faucetAmount: Number(process.env.NEXT_PUBLIC_FAUCET_AMOUNT ?? '10000'),
   faucetAmountLabel: process.env.NEXT_PUBLIC_FAUCET_AMOUNT_LABEL ?? 'test tokens',
+
+  // Community web faucet, offered as a fallback when the in-browser claim
+  // keeps failing (e.g. during network instability / an Alphanet reset).
+  communityFaucetUrl:
+    process.env.NEXT_PUBLIC_COMMUNITY_FAUCET_URL ?? 'https://faucet.thruscan.net',
 
   // Well-known native program addresses (from the official `thru` CLI config).
   tokenProgramAddress:

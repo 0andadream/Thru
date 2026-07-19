@@ -2,6 +2,7 @@
 
 import { decodeAddress } from '@thru/sdk/helpers';
 import { ConsensusStatus, type BuildAndSignTransactionOptions } from '@thru/sdk';
+import { sleep } from '@/lib/utils';
 import { getThru } from './client';
 import { thruConfig } from './config';
 import { getAccountSnapshot } from './account';
@@ -37,6 +38,7 @@ const CREATING_PROOF_TYPE = 1;
 const VM_NONCE_TOO_LOW = -511;
 const VM_NONCE_TOO_HIGH = -510;
 const VM_FEE_PAYER_DOES_NOT_EXIST = -508;
+const VM_REVERT = -765;
 
 const VM_MESSAGES: Record<number, string> = {
   [-511]: 'nonce too low',
@@ -189,6 +191,20 @@ export async function ensureAccountExists(account: ThruAccount, onPhase?: (p: Tx
     const after = await getAccountSnapshot(account.address);
     if (!after.exists) throw err;
   }
+
+  // Wait until the freshly-created account is actually queryable before we try
+  // to spend from it — a brand-new account can take a few seconds to become
+  // visible, which otherwise shows up as a faucet revert.
+  await waitUntilVisible(account.address);
+}
+
+/** Poll until the account is visible on-chain (or timeout). */
+async function waitUntilVisible(address: string, timeoutMs = 20_000) {
+  const deadline = Date.now() + timeoutMs;
+  while (Date.now() < deadline) {
+    if ((await getAccountSnapshot(address)).exists) return;
+    await sleep(2000);
+  }
 }
 
 /** Submit a faucet withdraw sending `amount` base units to the account itself. */
@@ -239,9 +255,9 @@ export async function claimFaucetInBrowser(
   amount: bigint = BigInt(thruConfig.faucetAmount),
   onPhase?: (p: TxPhase) => void,
 ) {
-  // Step 1: make sure the account exists on-chain. Don't hard-fail here — the
-  // withdraw below is authoritative (it reports -508 if the account really
-  // isn't there), which lets us attribute the error to the right step.
+  // Step 1: make sure the account exists + is visible on-chain. Don't hard-fail
+  // here — the withdraw below is authoritative (it reports -508 if the account
+  // really isn't there), which lets us attribute the error to the right step.
   let createError: unknown;
   try {
     await ensureAccountExists(account, onPhase);
@@ -249,22 +265,36 @@ export async function claimFaucetInBrowser(
     createError = err;
   }
 
-  // Step 2: claim from the faucet.
-  try {
-    await faucetWithdraw(account, amount, onPhase);
-  } catch (err) {
-    if (
-      err instanceof VmError &&
-      err.code === VM_FEE_PAYER_DOES_NOT_EXIST &&
-      createError instanceof Error
-    ) {
-      throw new Error(`Account activation failed — ${createError.message}`);
+  // Step 2: claim from the faucet. The faucet can be flaky during network
+  // instability, so retry a few times on a program revert before giving up.
+  let lastError: unknown;
+  for (let attempt = 0; attempt < 4; attempt++) {
+    try {
+      await faucetWithdraw(account, amount, onPhase);
+      return;
+    } catch (err) {
+      lastError = err;
+      if (
+        err instanceof VmError &&
+        err.code === VM_FEE_PAYER_DOES_NOT_EXIST &&
+        createError instanceof Error
+      ) {
+        throw new Error(`Account activation failed — ${createError.message}`);
+      }
+      // A program revert (-765) is often transient on Alphanet — wait and retry.
+      if (err instanceof VmError && err.code === VM_REVERT && attempt < 3) {
+        onPhase?.('confirming');
+        await sleep(3000);
+        continue;
+      }
+      break;
     }
-    if (err instanceof Error) {
-      throw new Error(`Faucet claim failed — ${err.message}`);
-    }
-    throw err;
   }
+
+  if (lastError instanceof Error) {
+    throw new Error(`Faucet claim failed — ${lastError.message}`);
+  }
+  throw lastError ?? new Error('Faucet claim failed.');
 }
 
 export { VmError, VM_FEE_PAYER_DOES_NOT_EXIST, submitWithNonce, currentSlot, buildAndSign };

@@ -1,10 +1,11 @@
 'use client';
 
 import * as React from 'react';
-import { Coins, Loader2, PartyPopper, RefreshCw, Wallet } from 'lucide-react';
+import { Coins, ExternalLink, Loader2, PartyPopper, RefreshCw, Wallet } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { CopyButton } from '@/components/ui/copy-button';
 import { useToast } from '@/components/ui/toast';
 import { useWizard } from '../wizard-context';
 import { AddressRow, StepHeading, StepMotion, StepNav } from '../step-parts';
@@ -164,7 +165,26 @@ export function FundStep() {
               </Button>
             )}
 
-            {phase === 'error' && message && <p className="text-center text-sm text-destructive">{message}</p>}
+            {phase === 'error' && message && (
+              <div className="space-y-3 rounded-sm border border-destructive/40 bg-destructive/5 p-4 text-sm">
+                <p className="text-destructive">{message}</p>
+                <p className="text-xs text-muted-foreground">
+                  The {thruConfig.network} faucet can be flaky during busy periods or after a network
+                  reset. Try again, or use the community faucet with your address:
+                </p>
+                <div className="flex flex-col gap-2 sm:flex-row">
+                  <Button variant="outline" size="sm" onClick={handleFaucet} disabled={busy}>
+                    <RefreshCw className="size-4" /> Try again
+                  </Button>
+                  <Button variant="outline" size="sm" asChild>
+                    <a href={thruConfig.communityFaucetUrl} target="_blank" rel="noreferrer noopener">
+                      Open community faucet <ExternalLink className="size-4" />
+                    </a>
+                  </Button>
+                  {account && <CopyButton value={account.address} label="Copy my address" variant="ghost" size="sm" showValue />}
+                </div>
+              </div>
+            )}
           </CardContent>
         </Card>
 
