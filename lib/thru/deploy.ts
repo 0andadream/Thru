@@ -145,73 +145,124 @@ async function deployTokenOnChain(
   onPhase?: (p: TxPhase) => void,
 ): Promise<DeployResult> {
   const thru = getThru();
-  const { deriveMintAddress, createInitializeMintInstruction } = await import(
-    '@thru/programs/token'
-  );
+  const {
+    deriveMintAddress,
+    deriveTokenAccountAddress,
+    createInitializeMintInstruction,
+    createInitializeAccountInstruction,
+    createMintToInstruction,
+  } = await import('@thru/programs/token');
   const { ensureAccountExists, submitWithNonce, currentSlot, buildAndSign } = await import(
     './faucet-onchain'
   );
   const { getAccountSnapshot } = await import('./account');
+
+  const program = thruConfig.tokenProgramAddress;
+  const ownerBytes = publicKeyBytes(account);
+  const header = (n: bigint, slot: bigint) => ({
+    fee: 0n,
+    nonce: n,
+    startSlot: slot,
+    expiryAfter: 100,
+    computeUnits: 300_000,
+    memoryUnits: 10_000,
+    stateUnits: 10_000,
+    chainId: thruConfig.chainId,
+  });
+
+  // Submit one token instruction, fetching a fresh nonce + slot each time.
+  async function step(
+    accounts: Parameters<typeof buildAndSign>[1]['accounts'],
+    instructionData: Parameters<typeof buildAndSign>[1]['instructionData'],
+  ) {
+    const { nonce } = await getAccountSnapshot(account.address);
+    const slot = await currentSlot();
+    await submitWithNonce(
+      nonce,
+      (n) => buildAndSign(account, { program, accounts, instructionData, header: header(n, slot) }),
+      onPhase,
+    );
+  }
 
   // The creator/fee-payer account must exist on-chain first (fee 0).
   onPhase?.('building');
   await ensureAccountExists(account, onPhase);
 
   const ticker = form.ticker.toUpperCase().slice(0, 8);
-  // The token program requires a 32-byte (64 hex char) mint-derivation seed.
-  const seedHex = randomSeedHex(32);
-  const mint = deriveMintAddress(thru, account.address, seedHex, thruConfig.tokenProgramAddress);
 
-  // Prove the (empty) mint account slot so the program can initialize it.
-  const stateProof = await thru.proofs.generate({
+  // 1) Initialize the mint.
+  const seedHex = randomSeedHex(32); // token program requires a 32-byte seed
+  const mint = deriveMintAddress(thru, account.address, seedHex, program);
+  const mintProof = await thru.proofs.generate({
     address: mint.address,
     proofType: 1 /* CREATING */,
   } as never);
-
-  const instruction = createInitializeMintInstruction({
-    mintAccountBytes: mint.bytes,
-    decimals: form.decimals,
-    mintAuthorityBytes: publicKeyBytes(account),
-    creatorBytes: publicKeyBytes(account),
-    ticker,
-    seedHex,
-    stateProof: stateProof.proof,
-  });
-
-  const { nonce } = await getAccountSnapshot(account.address);
-  const slot = await currentSlot();
-
-  await submitWithNonce(
-    nonce,
-    (n) =>
-      buildAndSign(account, {
-        program: thruConfig.tokenProgramAddress,
-        accounts: { readWrite: [mint.address] },
-        instructionData: instruction,
-        header: {
-          fee: 0n,
-          nonce: n,
-          startSlot: slot,
-          expiryAfter: 100,
-          computeUnits: 300_000,
-          memoryUnits: 10_000,
-          stateUnits: 10_000,
-          chainId: thruConfig.chainId,
-        },
-      }),
-    onPhase,
+  await step(
+    { readWrite: [mint.address] },
+    createInitializeMintInstruction({
+      mintAccountBytes: mint.bytes,
+      decimals: form.decimals,
+      mintAuthorityBytes: ownerBytes,
+      creatorBytes: ownerBytes,
+      ticker,
+      seedHex,
+      stateProof: mintProof.proof,
+    }),
   );
+
+  // 2) Create the owner's token account, and 3) mint an initial supply into it.
+  // If these fail, the mint still exists — surface a partial success.
+  let tokenAccountAddress: string | undefined;
+  let mintedSupply: bigint | undefined;
+  try {
+    const tokenAcc = deriveTokenAccountAddress(thru, account.address, mint.address, program);
+    const taProof = await thru.proofs.generate({
+      address: tokenAcc.address,
+      proofType: 1 /* CREATING */,
+    } as never);
+    await step(
+      { readWrite: [tokenAcc.address], readOnly: [mint.address] },
+      createInitializeAccountInstruction({
+        tokenAccountBytes: tokenAcc.bytes,
+        mintAccountBytes: mint.bytes,
+        ownerAccountBytes: ownerBytes,
+        seedBytes: tokenAcc.derivedSeed,
+        stateProof: taProof.proof,
+      }),
+    );
+    tokenAccountAddress = tokenAcc.address;
+
+    const supply = 1_000_000n * 10n ** BigInt(form.decimals);
+    await step(
+      { readWrite: [mint.address, tokenAcc.address] },
+      createMintToInstruction({
+        mintAccountBytes: mint.bytes,
+        destinationAccountBytes: tokenAcc.bytes,
+        authorityAccountBytes: ownerBytes,
+        amount: supply,
+      }),
+    );
+    mintedSupply = supply;
+  } catch (err) {
+    // Mint exists; account/supply step failed — return what we have.
+    // eslint-disable-next-line no-console
+    console.warn('Token account / mint-to step failed:', err);
+  }
+
+  const details: Record<string, string> = {
+    Ticker: ticker,
+    Decimals: String(form.decimals),
+    'Mint authority': account.address,
+  };
+  if (tokenAccountAddress) details['Your token account'] = tokenAccountAddress;
+  if (mintedSupply) details['Initial supply'] = `1,000,000 ${ticker}`;
 
   return {
     kind: 'token',
     label: form.name,
     metaAddress: mint.address,
-    bufferAddress: undefined,
+    bufferAddress: tokenAccountAddress,
     onChain: true,
-    details: {
-      Ticker: ticker,
-      Decimals: String(form.decimals),
-      'Mint authority': account.address,
-    },
+    details,
   };
 }
