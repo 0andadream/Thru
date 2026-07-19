@@ -1,221 +1,157 @@
 # Thru Onboard
 
-> **Get started on Thru in 60 seconds.** A clean, wizard-style dApp that walks
-> non-technical users through creating an account, getting test tokens,
-> deploying a program, and claiming a name on the **Thru** blockchain
-> (Alphanet / testnet).
+Thru Onboard is an unofficial community onboarding dApp for Thru Alphanet. It
+guides a new user through creating an account, claiming test THRU, launching a
+simple fungible token, and registering a name.
 
-Built with **Next.js 14 (App Router)**, **TypeScript**, **Tailwind CSS**,
-**Radix UI**, and the official **[`@thru/sdk`](https://www.npmjs.com/package/@thru/sdk)**
-family of packages. All key generation and signing happens **client-side only** —
-private keys never touch a server.
+The app is built with Next.js 14, TypeScript, Tailwind CSS, and Thru's official
+web packages. Keys are generated and transactions are signed in the browser.
 
----
+> **Alphanet only.** Test tokens have no monetary value, and network state may
+> be reset. Never use an account created here for real assets.
 
-## ✨ Features
+## What the app does
 
-- **6-step guided wizard** with a clickable progress stepper and per-step
-  animations.
-  1. **Welcome** — hero + "Start now".
-  2. **Create Account** — Ed25519 keypair generated in the browser, public
-     address shown, one-click JSON keystore download + copy, repeated backup
-     warnings, and **optional passkey** registration (WebAuthn).
-  3. **Get Tokens** — **one tap, fully in the browser, zero server setup.**
-     Thru's faucet is an on-chain program and network fees are 0, so the app
-     creates the account (if needed) and submits a faucet-withdraw transaction
-     directly from the browser — no wallet, operator, or CLI. The
-     faucet-withdraw instruction was reproduced from the official `thru` CLI
-     and is verified to match its output byte-for-byte. Balance auto-updates on
-     arrival. (An optional server-side relayer / `FAUCET_URL` gateway is still
-     supported for networks that charge fees or gate the faucet.)
-  4. **Launch Token** — create a real token mint, owner token account, and
-     initial supply in one guided action.
-  5. **Claim a Name** — root name with auto-suggestions, subdomain
-     (`alice.yourname`), and optional URL / Twitter / linked-pubkey records.
-  6. **Success Dashboard** — summary of everything created, explorer links,
-     "Start over" / "Do more", and confetti 🎉.
-- **On-brand Thru UI** — the official industrial look: pale-sage engineering
-  grid, white bordered work panels with hard offset shadows, crimson-red
-  accent, near-black ink CTAs, monospace micro-labels, and sharp corners.
-  **Light mode** (default, matches thru.org) + an industrial **dark mode**,
-  fully **mobile responsive**. Copy is written in Thru's terse, "close to the
-  metal" voice.
-- **Copy buttons and explorer links everywhere.**
-- **Advanced mode toggle** exposing RPC host + chain id.
-- **Client-side only keys** with strong, repeated backup warnings.
-- **Faucet rate limiting** (per-IP sliding window) in the server route.
-- **Testnet disclaimers** in the footer (tokens have no value).
-- **Progress persistence** — refresh mid-flow without losing your new account.
+1. **Create an account**
+   - Generates an Ed25519 keypair in the browser.
+   - Shows the Thru `ta...` address.
+   - Requires the user to download a JSON key backup before continuing.
+   - Offers optional WebAuthn passkey registration.
+2. **Claim test THRU**
+   - Creates the account on-chain when necessary.
+   - Submits the official faucet `withdraw` instruction directly from the
+     browser.
+   - Claims up to 10,000 base units and watches the live account balance.
+   - Links to the community ThruScan faucet as a backup.
+3. **Launch a Simple Token**
+   - Initializes a Token Program mint.
+   - Initializes the owner's deterministic token account.
+   - Mints an initial supply of 1,000,000 tokens to that account.
+   - Shows the mint and token-account addresses in the explorer.
+4. **Register a name**
+   - Derives and initializes a root registrar.
+   - Registers a subdomain and displays its on-chain addresses.
+5. **Review the result**
+   - Summarizes the account, token, and name.
+   - Provides copy controls and explorer links.
 
----
+## Thru integration
 
-## 🚀 Quick start (local)
+The implementation follows Thru's documented account and transaction model:
+
+- The official Token Program owns two relevant account types:
+  `TokenMintAccount`, which stores token-wide configuration and supply, and
+  `TokenAccount`, which stores an owner's balance for one mint.
+- Token creation uses the documented `initialize_mint`, `initialize_account`,
+  and `mint_to` instruction sequence.
+- Mint addresses are derived from the mint authority and a seed. Token-account
+  addresses are derived from the owner, mint, and seed.
+- New mint, token, account, and name-service accounts use creating state
+  proofs before their initialization transactions are submitted.
+- Transaction account indices are resolved against the final sorted account
+  list by the official SDK builders.
+
+Official references:
+
+- [Thru documentation](https://thru.org/docs/)
+- [Set up the Thru DevKit and CLI](https://thru.org/docs/program-development/setting-up-thru-devkit/)
+- [Token Program](https://thru.org/docs/core-programs/token-program/)
+- [`@thru/programs`](https://thru.org/docs/sdks/web-packages/programs/)
+- [Thru Explorer](https://scan.thru.org/)
+
+## Technology
+
+- Next.js 14 with the App Router
+- React 18 and TypeScript
+- Tailwind CSS and Radix UI
+- `@thru/sdk` for RPC, keys, state proofs, transaction construction, signing,
+  submission, and tracking
+- `@thru/programs/token` for token address derivation and instruction builders
+- `@thru/passkey` for optional WebAuthn support
+
+## Run locally
+
+Requirements:
+
+- Node.js 18.18 or newer
+- npm
 
 ```bash
-# 1. Install dependencies
 npm install
-
-# 2. Configure your network (optional — sensible Alphanet defaults are built in)
 cp .env.example .env.local
-#   edit .env.local as needed
-
-# 3. Run the dev server
 npm run dev
-# open http://localhost:3000
 ```
 
-Other scripts:
+Open [http://localhost:3000](http://localhost:3000).
+
+Available checks:
 
 ```bash
-npm run build      # production build
-npm run start      # serve the production build
-npm run typecheck  # tsc --noEmit
-npm run lint       # next lint
+npm run typecheck
+npm run lint
+npm run build
 ```
 
-Requires **Node 18.18+** (Node 20+ recommended).
+## Configuration
 
----
-
-## 🔧 Configuration
-
-Everything network-specific is read from environment variables — see
-[`.env.example`](./.env.example) for the full, documented list. The most common:
+The defaults target Thru Alphanet.
 
 | Variable | Purpose | Default |
 | --- | --- | --- |
-| `NEXT_PUBLIC_THRU_RPC_URL` | RPC endpoint the browser talks to | `https://rpc.alphanet.thru.org` |
-| `NEXT_PUBLIC_THRU_EXPLORER_URL` | Block explorer base URL | `https://explorer.alphanet.thru.org` |
-| `NEXT_PUBLIC_THRU_NETWORK` | Display name | `Alphanet` |
-| `THRU_CLI_BIN` | Path to the `thru` binary to enable the **built-in faucet relayer** (one-click funding). | _(blank)_ |
-| `THRU_FAUCET_OPERATOR_KEY` | 64-hex **funded** key the relayer uses to pay faucet-claim fees (server secret). | _(blank)_ |
-| `THRU_FAUCET_AMOUNT` | Amount per claim (base units; CLI caps at 10000/tx). | `10000` |
-| `FAUCET_URL` | Optional external HTTP faucet **gateway** to proxy to instead of the relayer. | _(blank)_ |
-| `FAUCET_RATE_LIMIT_PER_HOUR` | One-click faucet requests per IP per hour. | `3` |
-| `NEXT_PUBLIC_TOKEN_PROGRAM_ADDRESS` | Token program address (enables real token mint) | _(blank → preview)_ |
-| `NEXT_PUBLIC_NAME_SERVICE_PROGRAM_ADDRESS` | Name Service program address | _(blank → preview)_ |
+| `NEXT_PUBLIC_THRU_RPC_URL` | Browser RPC endpoint | `https://rpc.alphanet.thru.org` |
+| `NEXT_PUBLIC_THRU_EXPLORER_URL` | Explorer base URL | `https://scan.thru.org` |
+| `NEXT_PUBLIC_THRU_NETWORK` | Network label | `Alphanet` |
+| `NEXT_PUBLIC_THRU_CHAIN_ID` | Transaction chain ID | `1` |
+| `NEXT_PUBLIC_FAUCET_AMOUNT` | Requested faucet amount in base units | `10000` |
+| `NEXT_PUBLIC_COMMUNITY_FAUCET_URL` | Backup web faucet | `https://faucet.thruscan.net` |
+| `NEXT_PUBLIC_TOKEN_PROGRAM_ADDRESS` | Token Program address | Thru's built-in Token Program |
+| `NEXT_PUBLIC_NAME_SERVICE_PROGRAM_ADDRESS` | Name Service Program address | Thru's built-in Name Service Program |
 
-### On-chain vs. preview mode
+See [`.env.example`](./.env.example) for optional server-side faucet gateway
+and relayer settings.
 
-This tool ships wired to the real Thru SDK. Some actions require a
-network-specific **program address** that isn't hard-coded in the SDK:
+## Security notes
 
-- **Account creation & signing** — always real (client-side Ed25519).
-- **Faucet & balance** — balances always read from live RPC. Funding uses the
-  real on-chain faucet via the `thru` CLI (guided, key pre-filled); set
-  `FAUCET_URL` only if you also run an HTTP faucet gateway.
-- **Simple Token deploy** — a **real on-chain token mint** (via
-  `@thru/programs/token`) as soon as `NEXT_PUBLIC_TOKEN_PROGRAM_ADDRESS` is set.
-- **Name Service** — real once its program address is configured.
+- Private keys are generated and used client-side.
+- A private key is not sent to the app's server or the faucet.
+- The wizard stores its state, including the testnet key, in browser
+  `localStorage` so a refresh does not lose progress.
+- Anyone with the downloaded key backup or browser-stored private key controls
+  the account.
+- **Start over** clears the saved wizard state from the current browser.
+- This design is appropriate only for an experimental testnet onboarding tool.
 
-When a required address is not configured, that step runs in a clearly-labelled
-**Preview** mode: it uses the SDK's **real** address-derivation primitives to
-show and let users copy the genuine addresses the action would occupy, without
-submitting a transaction. Every preview surface is badged so nothing is
-misleading. Plug in the addresses for your network to flip them to live.
+## Deployment
 
----
+The app can run on Vercel or any Node.js host:
 
-## ☁️ Deploy to Vercel
-
-1. Push this repo to GitHub.
-2. In [Vercel](https://vercel.com/new), **Import** the repo (framework:
-   **Next.js** — auto-detected).
-3. Add your environment variables (Project → Settings → Environment
-   Variables) from `.env.example`.
-4. **Deploy.**
-
-The faucet route (`/api/faucet`) runs on the Node.js runtime. The in-memory
-rate limiter is per-serverless-instance and best-effort; for production-grade
-protection back it with a shared store (e.g. Upstash Redis) or add a CAPTCHA.
-
-You can also deploy anywhere that runs a Next.js server (`npm run build && npm
-run start`).
-
----
-
-## 🗂️ Project structure
-
-```
-app/
-  layout.tsx            # Root layout, fonts, theme + toast providers
-  page.tsx              # Wizard shell (header, aurora bg, footer)
-  globals.css           # Tailwind + design tokens (light/dark)
-  icon.svg              # Favicon
-  api/faucet/route.ts   # Rate-limited faucet proxy (server-side)
-
-components/
-  ui/                   # Button, Card, Input, Progress, Switch, Badge,
-                        # Tooltip, Toast, CopyButton, Spinner
-  layout/               # Header, Footer, Logo, ThemeToggle
-  wizard/
-    wizard.tsx          # Step orchestrator
-    wizard-context.tsx  # useReducer state + localStorage persistence
-    stepper.tsx         # Progress stepper (desktop + mobile)
-    step-parts.tsx      # Shared step primitives (headings, address rows, nav)
-    advanced-toggle.tsx
-    steps/              # welcome, create-account, fund, deploy, name, success
-
-lib/
-  utils.ts              # cn(), hex helpers, formatting
-  confetti.ts           # celebration effects
-  storage.ts            # safe localStorage wrapper
-  rate-limit.ts         # sliding-window limiter for the faucet route
-  thru/
-    config.ts           # env-driven chain config
-    client.ts           # memoised Thru RPC client
-    keys.ts             # keypair gen, keystore download, private-key export
-    account.ts          # balance snapshot + waitForFunds polling
-    transactions.ts     # build → sign (local) → submit → track helper
-    faucet.ts           # client wrapper for /api/faucet
-    deploy.ts           # deploy catalog + token mint + preview derivation
-    nameservice.ts      # name derivation + registration
-    passkey.ts          # WebAuthn passkey registration
-    explorer.ts         # explorer URL helpers
-    types.ts            # shared types
-
+```bash
+npm run build
+npm run start
 ```
 
----
+For Vercel, import the GitHub repository, add any required values from
+`.env.example`, and deploy. The primary browser faucet path does not require a
+server-side operator key.
 
-## 🔒 Security
+## Project layout
 
-- **Keys are generated and used entirely in the browser.** The private key is
-  never sent to, or stored on, any server. The faucet route only ever receives
-  your **public** address.
-- Users are **prompted to download a JSON keystore backup** and cannot advance
-  past step 1 until they do.
-- The private key is masked by default and only revealed on explicit tap.
-- Wizard progress (including the freshly-created account) is stored in
-  `localStorage` so a refresh doesn't lose it. This is appropriate for a
-  **testnet** onboarding tool; clear your browser storage or hit **Start over**
-  to wipe it.
-- Passkeys (WebAuthn) are offered as an **optional** convenience layer.
-- The faucet route is **rate limited** per IP.
+```text
+app/                         Next.js routes and global styles
+components/layout/           Header, footer, logo, and theme controls
+components/ui/               Shared UI primitives
+components/wizard/           Wizard state, navigation, and step screens
+lib/thru/account.ts          Account balance and nonce reads
+lib/thru/client.ts           Thru RPC client
+lib/thru/deploy.ts           Simple Token launch flow
+lib/thru/faucet-onchain.ts   Account creation and official faucet transaction
+lib/thru/nameservice*.ts     Name derivation and registration
+lib/thru/keys.ts             Browser key generation and backup
+lib/thru/explorer.ts         Explorer URL helpers
+```
 
-> ⚠️ **Testnet only.** Test tokens have no monetary value and the network may be
-> reset at any time. Never send real funds to addresses created here. This is an
-> unofficial community tool.
+## Status
 
----
-
-## 📦 Thru packages used
-
-- [`@thru/sdk`](https://www.npmjs.com/package/@thru/sdk) — RPC client, keypair
-  generation, transaction building/signing, address derivation.
-- [`@thru/programs`](https://www.npmjs.com/package/@thru/programs) — on-chain
-  token program instruction builders.
-- [`@thru/passkey`](https://www.npmjs.com/package/@thru/passkey) — WebAuthn
-  passkey helpers.
-
----
-
-## 🔗 Links
-
-- Docs: <https://docs.thru.org>
-- Explorer: configured via `NEXT_PUBLIC_THRU_EXPLORER_URL`
-- RPC: configured via `NEXT_PUBLIC_THRU_RPC_URL`
-
----
-
-Built for the Thru community. MIT-style use — adapt freely for your network.
+Thru documentation and Alphanet behavior are evolving. This repository pins
+the Thru web packages to `0.2.39`; revalidate program addresses, instruction
+layouts, and network behavior when upgrading.

@@ -1,8 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import { CheckCircle2, Cpu, Loader2, Rocket } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { Cpu, Loader2, Rocket } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -11,8 +10,9 @@ import { Label } from '@/components/ui/label';
 import { useToast } from '@/components/ui/toast';
 import { useWizard } from '../wizard-context';
 import { AddressRow, StepHeading, StepMotion, StepNav } from '../step-parts';
-import { DEPLOY_OPTIONS, deploy, type TokenForm } from '@/lib/thru/deploy';
-import type { DeployKind, TxPhase } from '@/lib/thru/types';
+import { deploy, type TokenForm } from '@/lib/thru/deploy';
+import { isTokenProgramConfigured } from '@/lib/thru/config';
+import type { TxPhase } from '@/lib/thru/types';
 import { accountUrl, txUrl } from '@/lib/thru/explorer';
 import { popSuccess } from '@/lib/confetti';
 
@@ -29,19 +29,17 @@ const PHASE_LABEL: Record<TxPhase, string> = {
 export function DeployStep() {
   const { account, deployment, dispatch } = useWizard();
   const { toast } = useToast();
-  const [selected, setSelected] = React.useState<DeployKind>('token');
   const [phase, setPhase] = React.useState<TxPhase>('idle');
   const [token, setToken] = React.useState<TokenForm>({ name: 'My First Token', ticker: 'MFT', decimals: 6 });
 
   const busy = phase !== 'idle' && phase !== 'confirmed' && phase !== 'error';
-  const option = DEPLOY_OPTIONS.find((o) => o.kind === selected)!;
 
   async function handleDeploy() {
     if (!account) return;
     setPhase('building');
     try {
-      const result = await deploy(account, selected, {
-        token: selected === 'token' ? token : undefined,
+      const result = await deploy(account, 'token', {
+        token,
         onPhase: setPhase,
       });
       dispatch({ type: 'setDeployment', deployment: result });
@@ -78,103 +76,73 @@ export function DeployStep() {
         />
 
         {!deployment ? (
-          <>
-            <div className="grid gap-3">
-              {DEPLOY_OPTIONS.map((o) => {
-                const active = selected === o.kind;
-                const onChain = o.onChainAvailable();
-                return (
-                  <button
-                    key={o.kind}
-                    type="button"
-                    onClick={() => setSelected(o.kind)}
-                    disabled={busy}
-                    className={cn(
-                      'flex flex-col items-start gap-2 rounded-sm border p-4 text-left transition-all',
-                      active
-                        ? 'border-primary bg-primary/5 ring-2 ring-primary/30'
-                        : 'border-border hover:border-primary/50 hover:bg-secondary/50',
-                    )}
-                  >
-                    <div className="flex w-full items-center justify-between">
-                      <span className="text-2xl">{o.glyph}</span>
-                      {active && <CheckCircle2 className="size-5 text-primary" />}
-                    </div>
-                    <div>
-                      <p className="font-semibold">{o.label}</p>
-                      <p className="text-xs text-muted-foreground">{o.tagline}</p>
-                    </div>
-                    <Badge variant={onChain ? 'success' : 'secondary'} className="mt-1">
-                      {onChain ? 'On-chain' : 'Preview'}
-                    </Badge>
-                  </button>
-                );
-              })}
-            </div>
-
-            <Card>
-              <CardContent className="space-y-4 p-5">
-                <p className="text-sm text-muted-foreground">{option.description}</p>
-
-                {option.needsTokenForm && (
-                  <div className="grid gap-4 sm:grid-cols-3">
-                    <div className="space-y-1.5 sm:col-span-2">
-                      <Label htmlFor="token-name">Token name</Label>
-                      <Input
-                        id="token-name"
-                        value={token.name}
-                        maxLength={32}
-                        onChange={(e) => setToken((t) => ({ ...t, name: e.target.value }))}
-                        placeholder="My First Token"
-                      />
-                    </div>
-                    <div className="space-y-1.5">
-                      <Label htmlFor="token-ticker">Ticker</Label>
-                      <Input
-                        id="token-ticker"
-                        value={token.ticker}
-                        maxLength={8}
-                        onChange={(e) =>
-                          setToken((t) => ({ ...t, ticker: e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '') }))
-                        }
-                        placeholder="MFT"
-                        className="font-mono"
-                      />
-                    </div>
-                  </div>
-                )}
-
-                {!option.onChainAvailable() && (
-                  <p className="rounded-sm border border-warning/40 bg-warning/10 p-3 text-xs text-muted-foreground">
-                    <span className="font-semibold text-warning">Preview mode.</span> This network
-                    build has no token program address configured, so we&apos;ll generate the genuine
-                    derived Mint &amp; Token Account addresses
-                    without submitting a transaction. Set the address in your environment to enable a
-                    real on-chain deploy.
+          <Card>
+            <CardContent className="space-y-4 p-5">
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  <p className="font-semibold">Simple Token</p>
+                  <p className="text-sm text-muted-foreground">
+                    Create a mint, your token account, and an initial supply of 1,000,000 tokens.
                   </p>
-                )}
+                </div>
+                <Badge variant={isTokenProgramConfigured() ? 'success' : 'secondary'}>
+                  {isTokenProgramConfigured() ? 'On-chain' : 'Preview'}
+                </Badge>
+              </div>
 
-                <Button
-                  variant="gradient"
-                  size="lg"
-                  className="w-full"
-                  onClick={handleDeploy}
-                  loading={busy}
-                  disabled={busy || (option.needsTokenForm && (!token.name.trim() || !token.ticker.trim()))}
-                >
-                  {busy ? (
-                    <>
-                      <Loader2 className="animate-spin" /> {PHASE_LABEL[phase]}
-                    </>
-                  ) : (
-                    <>
-                      <Rocket /> Deploy {option.label}
-                    </>
-                  )}
-                </Button>
-              </CardContent>
-            </Card>
-          </>
+              <div className="grid gap-4 sm:grid-cols-3">
+                <div className="space-y-1.5 sm:col-span-2">
+                  <Label htmlFor="token-name">Token name</Label>
+                  <Input
+                    id="token-name"
+                    value={token.name}
+                    maxLength={32}
+                    onChange={(e) => setToken((t) => ({ ...t, name: e.target.value }))}
+                    placeholder="My First Token"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="token-ticker">Ticker</Label>
+                  <Input
+                    id="token-ticker"
+                    value={token.ticker}
+                    maxLength={8}
+                    onChange={(e) =>
+                      setToken((t) => ({ ...t, ticker: e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '') }))
+                    }
+                    placeholder="MFT"
+                    className="font-mono"
+                  />
+                </div>
+              </div>
+
+              {!isTokenProgramConfigured() && (
+                <p className="rounded-sm border border-warning/40 bg-warning/10 p-3 text-xs text-muted-foreground">
+                  <span className="font-semibold text-warning">Preview mode.</span> This network
+                  build has no token program address configured, so no transaction will be submitted.
+                </p>
+              )}
+
+              <Button
+                variant="gradient"
+                size="lg"
+                className="w-full"
+                onClick={handleDeploy}
+                loading={busy}
+                disabled={busy || !token.name.trim() || !token.ticker.trim()}
+              >
+                {busy ? (
+                  <>
+                    <Loader2 className="animate-spin" /> {PHASE_LABEL[phase]}
+                  </>
+                ) : (
+                  <>
+                    <Rocket /> Launch Simple Token
+                  </>
+                )}
+              </Button>
+            </CardContent>
+          </Card>
         ) : (
           <Card className={deployment.warning ? 'border-warning/40' : 'border-success/40'}>
             <CardContent className="space-y-4 p-6">
@@ -239,7 +207,7 @@ export function DeployStep() {
                   setPhase('idle');
                 }}
               >
-                Deploy something else
+                Launch another token
               </Button>
             </CardContent>
           </Card>
