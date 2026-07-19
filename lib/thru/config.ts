@@ -27,6 +27,13 @@ export const thruConfig = {
   communityFaucetUrl:
     process.env.NEXT_PUBLIC_COMMUNITY_FAUCET_URL ?? 'https://faucet.thruscan.net',
 
+  // The on-chain faucet vault the withdraw transfers from. This is a deployed
+  // address that can change when Alphanet resets — override it here if the
+  // in-browser faucet claim reverts while the CLI works.
+  faucetVaultAddress:
+    process.env.NEXT_PUBLIC_FAUCET_VAULT_ADDRESS ??
+    'ta-saCJjfH0xDsV2J74AuiWdJTdJ9Kr2REcM_75To19zLf',
+
   // Well-known native program addresses (from the official `thru` CLI config).
   tokenProgramAddress:
     process.env.NEXT_PUBLIC_TOKEN_PROGRAM_ADDRESS ??

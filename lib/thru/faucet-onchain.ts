@@ -18,9 +18,10 @@ import type { ThruAccount, TxPhase } from './types';
  * with no operator, no server, and no CLI.
  *
  * The faucet vault address and this instruction layout were reproduced from the
- * official `thru` CLI and verified to match its output byte-for-byte.
+ * official `thru` CLI and verified to match its output byte-for-byte. The vault
+ * is a deployed address (configurable, since it can change on network resets).
  */
-const FAUCET_VAULT_ADDRESS = 'ta-saCJjfH0xDsV2J74AuiWdJTdJ9Kr2REcM_75To19zLf';
+const FAUCET_VAULT_ADDRESS = thruConfig.faucetVaultAddress;
 
 // Native "system" program id used by the faucet-withdraw instruction.
 const SYSTEM_PROGRAM = new Uint8Array(32);
