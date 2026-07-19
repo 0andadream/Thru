@@ -265,12 +265,14 @@ export async function claimFaucetInBrowser(
     createError = err;
   }
 
-  // Step 2: claim from the faucet. The faucet can be flaky during network
-  // instability, so retry a few times on a program revert before giving up.
+  // Step 2: claim from the faucet. A revert (-765) is usually the faucet being
+  // low/rate-limited or the amount exceeding what it can currently dispense, so
+  // ladder the amount down and take whatever the faucet will actually give.
+  const ladder = amountLadder(amount);
   let lastError: unknown;
-  for (let attempt = 0; attempt < 4; attempt++) {
+  for (let i = 0; i < ladder.length; i++) {
     try {
-      await faucetWithdraw(account, amount, onPhase);
+      await faucetWithdraw(account, ladder[i], onPhase);
       return;
     } catch (err) {
       lastError = err;
@@ -281,10 +283,10 @@ export async function claimFaucetInBrowser(
       ) {
         throw new Error(`Account activation failed — ${createError.message}`);
       }
-      // A program revert (-765) is often transient on Alphanet — wait and retry.
-      if (err instanceof VmError && err.code === VM_REVERT && attempt < 3) {
+      // On a program revert, try a smaller amount; otherwise stop.
+      if (err instanceof VmError && err.code === VM_REVERT && i < ladder.length - 1) {
         onPhase?.('confirming');
-        await sleep(3000);
+        await sleep(1500);
         continue;
       }
       break;
@@ -295,6 +297,15 @@ export async function claimFaucetInBrowser(
     throw new Error(`Faucet claim failed — ${lastError.message}`);
   }
   throw lastError ?? new Error('Faucet claim failed.');
+}
+
+/** Descending amounts to try, so we take whatever a low faucet can dispense. */
+function amountLadder(requested: bigint): bigint[] {
+  const steps = [requested, 1000n, 100n, 25n, 10n, 1n];
+  const seen = new Set<string>();
+  return steps
+    .filter((a) => a > 0n && a <= requested)
+    .filter((a) => (seen.has(a.toString()) ? false : (seen.add(a.toString()), true)));
 }
 
 export { VmError, VM_FEE_PAYER_DOES_NOT_EXIST, submitWithNonce, currentSlot, buildAndSign };
