@@ -53,7 +53,7 @@ const VM_MESSAGES: Record<number, string> = {
   [-508]: 'fee-payer account does not exist',
   [-507]: 'account not live yet',
   [-506]: 'transaction expired',
-  [-765]: 'the faucet program rejected the claim (it may be empty, rate-limited, or the amount is over its per-claim limit)',
+  [-765]: 'the on-chain program rejected the transaction',
   [-766]: 'invalid program account',
   [-767]: 'program execution failed',
   [-764]: 'compute units exhausted',
@@ -65,8 +65,12 @@ class VmError extends Error {
     public userErrorCode?: bigint,
   ) {
     const label = VM_MESSAGES[code] ?? `vm error ${code}`;
+    const signedUserError =
+      userErrorCode != null ? BigInt.asIntN(64, BigInt(userErrorCode)) : undefined;
     const extra =
-      userErrorCode != null && userErrorCode !== 0n ? ` (program code ${userErrorCode})` : '';
+      signedUserError != null && signedUserError !== 0n
+        ? ` (program code ${signedUserError})`
+        : '';
     super(`${label}${extra} [vm ${code}]`);
     this.name = 'VmError';
   }

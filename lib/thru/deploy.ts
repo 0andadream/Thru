@@ -226,7 +226,16 @@ async function deployTokenOnChain(
   let mintedSupply: bigint | undefined;
   let warning: string | undefined;
   try {
-    const tokenAcc = deriveTokenAccountAddress(thru, account.address, mint.address, program);
+    // The address helper hashes owner + mint + this original seed. The token
+    // instruction must receive the original seed, not the derived hash.
+    const tokenAccountSeed = new Uint8Array(32);
+    const tokenAcc = deriveTokenAccountAddress(
+      thru,
+      account.address,
+      mint.address,
+      program,
+      tokenAccountSeed,
+    );
     const taProof = await thru.proofs.generate({
       address: tokenAcc.address,
       proofType: 1 /* CREATING */,
@@ -237,7 +246,7 @@ async function deployTokenOnChain(
         tokenAccountBytes: tokenAcc.bytes,
         mintAccountBytes: mint.bytes,
         ownerAccountBytes: ownerBytes,
-        seedBytes: tokenAcc.derivedSeed,
+        seedBytes: tokenAccountSeed,
         stateProof: taProof.proof,
       }),
     );
