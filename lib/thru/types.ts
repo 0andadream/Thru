@@ -39,6 +39,8 @@ export interface DeployResult {
   signature?: string;
   /** Extra key/value details to surface on the dashboard. */
   details?: Record<string, string>;
+  /** Non-fatal warning when only part of a multi-step deployment completed. */
+  warning?: string;
   /** True when this was submitted on-chain vs. produced in preview mode. */
   onChain: boolean;
 }

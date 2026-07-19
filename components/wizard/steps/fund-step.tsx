@@ -205,6 +205,17 @@ export function FundStep() {
               </Button>
             )}
 
+            {!isFunded && (
+              <div className="flex flex-col items-center gap-2 rounded-sm border border-border-muted bg-secondary/30 p-3 text-center text-xs text-muted-foreground sm:flex-row sm:justify-between sm:text-left">
+                <span>Having trouble with the in-app claim? Use the community faucet.</span>
+                <Button variant="outline" size="sm" asChild>
+                  <a href={thruConfig.communityFaucetUrl} target="_blank" rel="noreferrer noopener">
+                    Open faucet.thruscan.net <ExternalLink className="size-4" />
+                  </a>
+                </Button>
+              </div>
+            )}
+
             {phase === 'error' && message && (
               <div className="space-y-3 rounded-sm border border-destructive/40 bg-destructive/5 p-4 text-sm">
                 <p className="text-destructive">{message}</p>

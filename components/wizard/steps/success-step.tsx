@@ -104,6 +104,19 @@ export function SuccessStep() {
                   value={deployment.metaAddress}
                   href={accountUrl(deployment.metaAddress)}
                 />
+                {deployment.kind === 'token' && deployment.bufferAddress && (
+                  <AddressRow
+                    label="Token account (mint destination)"
+                    value={deployment.bufferAddress}
+                    href={accountUrl(deployment.bufferAddress)}
+                  />
+                )}
+                {deployment.warning && (
+                  <p className="rounded-sm border border-warning/40 bg-warning/10 p-3 text-xs text-muted-foreground">
+                    <span className="font-semibold text-warning">Partial deployment.</span>{' '}
+                    {deployment.warning}
+                  </p>
+                )}
               </div>
             )}
 

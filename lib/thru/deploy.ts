@@ -157,6 +157,15 @@ async function deployTokenOnChain(
   );
   const { getAccountSnapshot } = await import('./account');
 
+  async function waitForAccount(address: string, label: string, timeoutMs = 30_000) {
+    const deadline = Date.now() + timeoutMs;
+    while (Date.now() < deadline) {
+      if ((await getAccountSnapshot(address)).exists) return;
+      await new Promise((resolve) => setTimeout(resolve, 1_500));
+    }
+    throw new Error(`${label} was submitted but is not visible on-chain yet. Please try again.`);
+  }
+
   const program = thruConfig.tokenProgramAddress;
   const ownerBytes = publicKeyBytes(account);
   const header = (n: bigint, slot: bigint) => ({
@@ -209,11 +218,13 @@ async function deployTokenOnChain(
       stateProof: mintProof.proof,
     }),
   );
+  await waitForAccount(mint.address, 'Token mint');
 
   // 2) Create the owner's token account, and 3) mint an initial supply into it.
   // If these fail, the mint still exists — surface a partial success.
   let tokenAccountAddress: string | undefined;
   let mintedSupply: bigint | undefined;
+  let warning: string | undefined;
   try {
     const tokenAcc = deriveTokenAccountAddress(thru, account.address, mint.address, program);
     const taProof = await thru.proofs.generate({
@@ -231,6 +242,7 @@ async function deployTokenOnChain(
       }),
     );
     tokenAccountAddress = tokenAcc.address;
+    await waitForAccount(tokenAcc.address, 'Token account');
 
     const supply = 1_000_000n * 10n ** BigInt(form.decimals);
     await step(
@@ -244,7 +256,8 @@ async function deployTokenOnChain(
     );
     mintedSupply = supply;
   } catch (err) {
-    // Mint exists; account/supply step failed — return what we have.
+    const message = err instanceof Error ? err.message : 'Unknown token-account error';
+    warning = `The mint was created, but its token account or initial mint failed: ${message}`;
     // eslint-disable-next-line no-console
     console.warn('Token account / mint-to step failed:', err);
   }
@@ -264,5 +277,6 @@ async function deployTokenOnChain(
     bufferAddress: tokenAccountAddress,
     onChain: true,
     details,
+    warning,
   };
 }

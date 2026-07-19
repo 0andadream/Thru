@@ -48,11 +48,18 @@ export function DeployStep() {
       setPhase('confirmed');
       popSuccess(0.5, 0.45);
       toast({
-        variant: 'success',
-        title: result.onChain ? 'Deployed on-chain!' : 'Deployment prepared',
-        description: result.onChain
-          ? `${result.label} is live.`
-          : `${result.label} — preview addresses generated.`,
+        variant: result.warning ? 'warning' : 'success',
+        title: result.warning
+          ? 'Mint created — initial supply incomplete'
+          : result.onChain
+            ? 'Deployed on-chain!'
+            : 'Deployment prepared',
+        description: result.warning
+          ? result.warning
+          : result.onChain
+            ? `${result.label} is live.`
+            : `${result.label} — preview addresses generated.`,
+        duration: result.warning ? 9000 : undefined,
       });
     } catch (err) {
       setPhase('error');
@@ -169,7 +176,7 @@ export function DeployStep() {
             </Card>
           </>
         ) : (
-          <Card className="border-success/40">
+          <Card className={deployment.warning ? 'border-warning/40' : 'border-success/40'}>
             <CardContent className="space-y-4 p-6">
               <div className="flex items-center gap-3">
                 <div className="flex size-11 items-center justify-center rounded-sm bg-success/10 text-success">
@@ -178,13 +185,22 @@ export function DeployStep() {
                 <div>
                   <p className="flex items-center gap-2 font-semibold">
                     {deployment.label}
-                    <Badge variant={deployment.onChain ? 'success' : 'secondary'}>
-                      {deployment.onChain ? 'Live on-chain' : 'Preview'}
+                    <Badge variant={deployment.warning ? 'warning' : deployment.onChain ? 'success' : 'secondary'}>
+                      {deployment.warning ? 'Partially deployed' : deployment.onChain ? 'Live on-chain' : 'Preview'}
                     </Badge>
                   </p>
-                  <p className="text-sm text-muted-foreground">Your program addresses are ready.</p>
+                  <p className="text-sm text-muted-foreground">
+                    {deployment.warning ? 'The mint exists, but the initial supply needs attention.' : 'Your program addresses are ready.'}
+                  </p>
                 </div>
               </div>
+
+              {deployment.warning && (
+                <p className="rounded-sm border border-warning/40 bg-warning/10 p-3 text-sm text-muted-foreground">
+                  <span className="font-semibold text-warning">Partial deployment.</span>{' '}
+                  {deployment.warning}
+                </p>
+              )}
 
               <div className="space-y-2">
                 <AddressRow
@@ -194,7 +210,7 @@ export function DeployStep() {
                 />
                 {deployment.bufferAddress && (
                   <AddressRow
-                    label="Buffer address"
+                    label={deployment.kind === 'token' ? 'Your token account (mint destination)' : 'Buffer address'}
                     value={deployment.bufferAddress}
                     href={accountUrl(deployment.bufferAddress)}
                   />
@@ -203,6 +219,17 @@ export function DeployStep() {
                   <AddressRow label="Transaction" value={deployment.signature} href={txUrl(deployment.signature)} />
                 )}
               </div>
+
+              {deployment.details && (
+                <dl className="grid gap-2 rounded-sm border border-border-muted bg-secondary/30 p-3 text-xs sm:grid-cols-2">
+                  {Object.entries(deployment.details).map(([label, value]) => (
+                    <div key={label}>
+                      <dt className="label-mono text-muted-foreground">{label}</dt>
+                      <dd className="break-all font-mono">{value}</dd>
+                    </div>
+                  ))}
+                </dl>
+              )}
 
               <Button
                 variant="outline"
