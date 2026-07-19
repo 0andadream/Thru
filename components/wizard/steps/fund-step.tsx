@@ -101,6 +101,15 @@ export function FundStep() {
     setTxPhase('building');
     setMessage('');
     try {
+      // If the account already has any balance, it's funded — don't re-claim
+      // (the faucet rejects repeat claims per account).
+      const pre = await getAccountSnapshot(account.address);
+      if (pre.balance > 0n) {
+        setBalance(pre.balance);
+        markFunded();
+        return;
+      }
+
       // Fully client-side claim: create the account if needed, then withdraw
       // from the on-chain faucet to it. No server / operator / CLI required.
       await claimFaucetInBrowser(account, BigInt(thruConfig.faucetAmount), setTxPhase);
@@ -120,9 +129,20 @@ export function FundStep() {
       }
     } catch (err) {
       if ((err as Error)?.name === 'AbortError') return;
+      // If the account ended up with a balance anyway, treat it as funded.
+      try {
+        const after = await getAccountSnapshot(account.address);
+        if (after.balance > 0n) {
+          setBalance(after.balance);
+          markFunded();
+          return;
+        }
+      } catch {
+        /* ignore */
+      }
       setPhase('error');
       const msg = err instanceof Error ? err.message : 'Unknown error';
-      setMessage(`${msg} — please try again in a moment.`);
+      setMessage(msg);
       toast({ variant: 'error', title: 'Faucet claim failed', description: msg });
     }
   }
