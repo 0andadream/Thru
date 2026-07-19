@@ -29,7 +29,7 @@ export const thruConfig = {
   // in-browser faucet claim reverts while the CLI works.
   faucetVaultAddress:
     process.env.NEXT_PUBLIC_FAUCET_VAULT_ADDRESS ??
-    'taxoImN8fTEOxXYnvgC6JZ0lN0n0qvZERwz_vlOjX3Mk',
+    'taxoImN8fTEOxXYnvgC6JZ0lN0n0qvZERwz_vlOjX3MkIn',
 
   // Well-known native program addresses (from the official `thru` CLI config).
   tokenProgramAddress:
