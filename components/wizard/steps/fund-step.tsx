@@ -155,7 +155,7 @@ export function FundStep() {
         <StepHeading
           eyebrow="Step 2"
           title="Fund your account"
-          description={`Get free ${thruConfig.network} test tokens from the community faucet. Copy your address, request tokens, then return here — your balance updates automatically.`}
+          description={`Get free ${thruConfig.network} test tokens from Thru's official on-chain faucet, directly in your browser.`}
         />
 
         <Card className={isFunded ? 'border-success' : undefined}>
@@ -185,30 +185,10 @@ export function FundStep() {
               </div>
             ) : (
               <div className="space-y-3">
-                <div className="grid gap-2 sm:grid-cols-[1fr_auto]">
-                  <Button variant="gradient" size="lg" asChild>
-                    <a href={thruConfig.communityFaucetUrl} target="_blank" rel="noreferrer noopener">
-                      <Coins /> Open community faucet <ExternalLink className="size-4" />
-                    </a>
-                  </Button>
-                  {account && (
-                    <CopyButton
-                      value={account.address}
-                      label="Copy my address"
-                      variant="outline"
-                      size="lg"
-                      showValue
-                    />
-                  )}
-                </div>
-                <p className="text-center text-xs text-muted-foreground">
-                  Paste your address into faucet.thruscan.net. This page will detect the tokens
-                  automatically when you return.
-                </p>
                 <Button
-                  variant="ghost"
-                  size="sm"
-                  className="w-full text-muted-foreground"
+                  variant="gradient"
+                  size="lg"
+                  className="w-full"
                   onClick={handleFaucet}
                   loading={busy}
                   disabled={busy}
@@ -219,9 +199,30 @@ export function FundStep() {
                       {phase === 'waiting' ? 'Waiting for tokens…' : TX_LABEL[txPhase]}
                     </>
                   ) : (
-                    <>Try experimental in-app faucet</>
+                    <>
+                      <Coins /> Get {thruConfig.faucetAmountLabel} from Thru
+                    </>
                   )}
                 </Button>
+                <div className="flex flex-col items-center gap-2 rounded-sm border border-border-muted bg-secondary/30 p-3 text-center text-xs text-muted-foreground sm:flex-row sm:justify-between sm:text-left">
+                  <span>If Thru&apos;s faucet is busy, use the community backup.</span>
+                  <div className="flex flex-wrap justify-center gap-2">
+                    {account && (
+                      <CopyButton
+                        value={account.address}
+                        label="Copy my address"
+                        variant="ghost"
+                        size="sm"
+                        showValue
+                      />
+                    )}
+                    <Button variant="outline" size="sm" asChild>
+                      <a href={thruConfig.communityFaucetUrl} target="_blank" rel="noreferrer noopener">
+                        Open ThruScan faucet <ExternalLink className="size-4" />
+                      </a>
+                    </Button>
+                  </div>
+                </div>
               </div>
             )}
 
