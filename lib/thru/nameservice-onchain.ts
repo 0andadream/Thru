@@ -106,6 +106,20 @@ async function exists(address: string): Promise<boolean> {
   return (await getAccountSnapshot(address)).exists;
 }
 
+/**
+ * Name registration is two dependent transactions. An execution update can
+ * arrive before a newly initialized registrar is queryable on the node that
+ * handles the following subdomain call, so wait for it to become visible.
+ */
+async function waitForAccount(address: string, label: string, timeoutMs = 30_000) {
+  const deadline = Date.now() + timeoutMs;
+  while (Date.now() < deadline) {
+    if (await exists(address)) return;
+    await new Promise((resolve) => setTimeout(resolve, 1_500));
+  }
+  throw new Error(`${label} was initialized but is not visible on-chain yet. Please try again.`);
+}
+
 /** Initialize a root registrar (idempotent — skips if it already exists). */
 export async function initRoot(account: ThruAccount, root: string, onPhase?: (p: TxPhase) => void) {
   const registrar = deriveRegistrarAddress(root);
@@ -148,6 +162,7 @@ export async function initRoot(account: ThruAccount, root: string, onPhase?: (p:
     }
     throw err;
   }
+  await waitForAccount(registrar, 'Root registrar');
   return registrar;
 }
 
