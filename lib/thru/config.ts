@@ -38,6 +38,9 @@ export const thruConfig = {
   nameServiceProgramAddress:
     process.env.NEXT_PUBLIC_NAME_SERVICE_PROGRAM_ADDRESS ??
     'taAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAUF',
+  thruRegistrarProgramAddress:
+    process.env.NEXT_PUBLIC_THRU_REGISTRAR_PROGRAM_ADDRESS ??
+    'taAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAYG',
 } as const;
 
 export function isTokenProgramConfigured(): boolean {
