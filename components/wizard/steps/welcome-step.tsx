@@ -1,7 +1,7 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { KeyRound, Coins, Rocket, Tag, ArrowRight } from 'lucide-react';
+import { KeyRound, Coins, Rocket, Wallet, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useWizard } from '../wizard-context';
 import { StepMotion } from '../step-parts';
@@ -11,7 +11,7 @@ const HIGHLIGHTS = [
   { icon: KeyRound, tag: 'KEYS', title: 'Create an account', text: 'Ed25519 keypair, generated on your device.' },
   { icon: Coins, tag: 'GAS', title: 'Pull test tokens', text: 'Free faucet drip to pay for transactions.' },
   { icon: Rocket, tag: 'SHIP', title: 'Deploy a program', text: 'A token or sample program, one click.' },
-  { icon: Tag, tag: 'NAME', title: 'Claim a name', text: 'Human-readable root + subdomain.' },
+  { icon: Wallet, tag: 'WALLET', title: 'Manage tokens', text: 'Track balances and manage tokens you launch.' },
 ];
 
 export function WelcomeStep() {
@@ -37,7 +37,7 @@ export function WelcomeStep() {
 
           <p className="mx-auto max-w-xl text-pretty text-base text-muted-foreground sm:text-lg">
             Thru is an L1 built close to the metal. This is the shortest path onto it: spin up an
-            account, pull test tokens, ship your first program, and claim your name — all on{' '}
+            account, pull test tokens, and launch your first token — all on{' '}
             {thruConfig.network}, no command line required.
           </p>
 
