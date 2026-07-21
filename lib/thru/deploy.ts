@@ -83,6 +83,26 @@ export interface TokenForm {
   enableFreeze?: boolean;
 }
 
+/** Resume a partial deployment without creating another mint. */
+export async function finishTokenSetup(account: ThruAccount, deployment: DeployResult, onPhase?: (p: TxPhase) => void): Promise<DeployResult> {
+  const thru = getThru(); const program = thruConfig.tokenProgramAddress; const ownerBytes = publicKeyBytes(account);
+  const { buildAndSign, currentSlot, submitWithNonce } = await import('./faucet-onchain');
+  const { getAccountSnapshot } = await import('./account');
+  const { deriveTokenAccountAddress, createInitializeAccountInstruction, createMintToInstruction, parseMintAccountData } = await import('@thru/programs/token');
+  const mintAccount = await thru.accounts.get(deployment.metaAddress); const mint = parseMintAccountData(mintAccount);
+  if (mint.mintAuthority !== account.address) throw new Error('This wallet is not the mint authority for this token.');
+  const tokenAcc = deriveTokenAccountAddress(thru, account.address, deployment.metaAddress, program, new Uint8Array(32));
+  const header = (nonce: bigint, slot: bigint) => ({ fee: 0n, nonce, startSlot: slot, expiryAfter: 100, computeUnits: 300_000, memoryUnits: 10_000, stateUnits: 10_000, chainId: thruConfig.chainId });
+  async function step(accounts: Parameters<typeof buildAndSign>[1]['accounts'], instructionData: Parameters<typeof buildAndSign>[1]['instructionData']) { const { nonce } = await getAccountSnapshot(account.address); const slot = await currentSlot(); await submitWithNonce(nonce, (n) => buildAndSign(account, { program, accounts, instructionData, header: header(n, slot) }), onPhase); }
+  if (!(await getAccountSnapshot(tokenAcc.address)).exists) {
+    const proof = await thru.proofs.generate({ address: tokenAcc.address, proofType: 1 } as never);
+    await step({ readWrite: [tokenAcc.address], readOnly: [deployment.metaAddress] }, createInitializeAccountInstruction({ tokenAccountBytes: tokenAcc.bytes, mintAccountBytes: (await import('@thru/sdk/helpers')).decodeAddress(deployment.metaAddress), ownerAccountBytes: ownerBytes, seedBytes: new Uint8Array(32), stateProof: proof.proof }));
+    const deadline = Date.now() + 30_000; while (!(await getAccountSnapshot(tokenAcc.address)).exists) { if (Date.now() > deadline) throw new Error('Token account is not visible yet. Try Finish setup again shortly.'); await new Promise((r) => setTimeout(r, 1500)); }
+  }
+  await step({ readWrite: [deployment.metaAddress, tokenAcc.address] }, createMintToInstruction({ mintAccountBytes: (await import('@thru/sdk/helpers')).decodeAddress(deployment.metaAddress), destinationAccountBytes: tokenAcc.bytes, authorityAccountBytes: ownerBytes, amount: 1_000_000n * 10n ** BigInt(mint.decimals) }));
+  return { ...deployment, bufferAddress: tokenAcc.address, warning: undefined, details: { ...deployment.details, 'Your token account': tokenAcc.address, 'Initial supply': `1,000,000 ${mint.ticker}` } };
+}
+
 /**
  * Deploy the chosen sample. Falls back to a clearly-labelled preview when the
  * required on-chain program isn't configured for this network build.

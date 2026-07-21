@@ -11,7 +11,7 @@ import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/components/ui/toast';
 import { useWizard } from '../wizard-context';
 import { AddressRow, StepHeading, StepMotion, StepNav } from '../step-parts';
-import { deploy, type TokenForm } from '@/lib/thru/deploy';
+import { deploy, finishTokenSetup, type TokenForm } from '@/lib/thru/deploy';
 import { isTokenProgramConfigured } from '@/lib/thru/config';
 import type { TxPhase } from '@/lib/thru/types';
 import { accountUrl, txUrl } from '@/lib/thru/explorer';
@@ -65,6 +65,12 @@ export function DeployStep() {
       const msg = err instanceof Error ? err.message : 'Unknown error';
       toast({ variant: 'error', title: 'Deploy failed', description: msg });
     }
+  }
+
+  async function handleFinishSetup() {
+    if (!account || !deployment) return; setPhase('building');
+    try { dispatch({ type: 'setDeployment', deployment: await finishTokenSetup(account, deployment, setPhase) }); setPhase('confirmed'); toast({ variant: 'success', title: 'Token setup complete' }); }
+    catch (err) { setPhase('error'); toast({ variant: 'error', title: 'Could not finish token setup', description: err instanceof Error ? err.message : 'Unknown error' }); }
   }
 
   return (
@@ -175,6 +181,8 @@ export function DeployStep() {
                   {deployment.warning}
                 </p>
               )}
+
+              {deployment.warning && <Button variant="gradient" size="sm" onClick={handleFinishSetup} loading={busy}><Cpu /> Finish token setup</Button>}
 
               <div className="space-y-2">
                 <AddressRow
