@@ -7,7 +7,7 @@ import { Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const buttonVariants = cva(
-  'inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-sm text-sm font-semibold ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0',
+  'inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-xl text-sm font-semibold ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0',
   {
     variants: {
       variant: {
@@ -16,11 +16,11 @@ const buttonVariants = cva(
           'border border-foreground bg-foreground text-background hover:bg-foreground/90',
         // Brand red primary CTA with a tactile hard shadow that presses in
         gradient:
-          'border border-foreground bg-primary text-primary-foreground shadow-hard-sm hover:-translate-y-px hover:shadow-hard active:translate-x-0.5 active:translate-y-0.5 active:shadow-none',
+          'border border-white/30 bg-primary text-primary-foreground shadow-hard-sm hover:-translate-y-px hover:brightness-110 active:translate-y-0',
         secondary:
           'border border-border-muted bg-secondary text-secondary-foreground hover:bg-secondary/70',
         outline:
-          'border border-foreground bg-card text-foreground hover:bg-secondary shadow-hard-sm hover:-translate-y-px hover:shadow-hard active:translate-x-0.5 active:translate-y-0.5 active:shadow-none',
+          'border border-white/30 bg-card text-foreground hover:bg-secondary shadow-hard-sm hover:-translate-y-px active:translate-y-0',
         ghost: 'text-foreground hover:bg-secondary',
         destructive:
           'border border-foreground bg-destructive text-destructive-foreground hover:bg-destructive/90',

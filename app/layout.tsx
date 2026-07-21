@@ -19,21 +19,21 @@ const jetbrainsMono = JetBrains_Mono({
 export const metadata: Metadata = {
   title: 'Thru Onboard — Get started on Thru in 60 seconds',
   description:
-    'A friendly, guided wizard that helps anyone create a Thru account, get test tokens, deploy a program, and claim a name — all in a couple of minutes. Testnet only.',
+    'A friendly, guided wallet that helps anyone create a Thru account, get test tokens, launch and transfer a token, and claim a name. Testnet only.',
   keywords: ['Thru', 'blockchain', 'onboarding', 'wallet', 'testnet', 'alphanet', 'web3'],
   authors: [{ name: 'Thru Onboard' }],
   openGraph: {
     title: 'Thru Onboard — Get started on Thru in 60 seconds',
     description:
-      'Create an account, get test tokens, deploy a program, and claim a name on the Thru blockchain.',
+      'Create an account, get test tokens, launch and transfer a token, and claim a name on Thru.',
     type: 'website',
   },
 };
 
 export const viewport: Viewport = {
   themeColor: [
-    { media: '(prefers-color-scheme: light)', color: '#cdd9d0' },
-    { media: '(prefers-color-scheme: dark)', color: '#0f1512' },
+    { media: '(prefers-color-scheme: light)', color: '#471417' },
+    { media: '(prefers-color-scheme: dark)', color: '#21080d' },
   ],
   width: 'device-width',
   initialScale: 1,

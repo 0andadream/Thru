@@ -91,7 +91,7 @@ function encodeWithdrawInstruction(
 }
 
 /** Most-recent usable slot for a transaction's startSlot (avoids expiry). */
-async function currentSlot(): Promise<bigint> {
+export async function currentSlot(): Promise<bigint> {
   const h = await getThru().blocks.getBlockHeight();
   const candidates = [h.clusterExecuted, h.locallyExecuted, h.finalized]
     .filter((v) => v != null)
@@ -122,7 +122,7 @@ async function submit(rawTransaction: Uint8Array, onPhase?: (p: TxPhase) => void
  * too low/high. The on-chain nonce read can lag behind the executing state, so
  * we converge to the accepted value instead of guessing.
  */
-async function submitWithNonce(
+export async function submitWithNonce(
   startNonce: bigint,
   buildRaw: (nonce: bigint) => Promise<Uint8Array>,
   onPhase?: (p: TxPhase) => void,
@@ -151,7 +151,7 @@ async function submitWithNonce(
   throw lastError ?? new Error('Could not find a valid nonce for the transaction.');
 }
 
-async function buildAndSign(
+export async function buildAndSign(
   account: ThruAccount,
   opts: Omit<BuildAndSignTransactionOptions, 'feePayer'>,
 ): Promise<Uint8Array> {
@@ -318,4 +318,4 @@ function amountLadder(requested: bigint): bigint[] {
     .filter((a) => (seen.has(a.toString()) ? false : (seen.add(a.toString()), true)));
 }
 
-export { VmError, VM_FEE_PAYER_DOES_NOT_EXIST, submitWithNonce, currentSlot, buildAndSign };
+export { VmError, VM_FEE_PAYER_DOES_NOT_EXIST };
