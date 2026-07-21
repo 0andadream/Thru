@@ -1,7 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import { BookOpen, Compass, RefreshCw, Wallet } from 'lucide-react';
+import { ArrowUpRight, BookOpen, Compass, Copy, RefreshCw, Send, Wallet } from 'lucide-react';
 import { Logo } from './logo';
 import { ThemeToggle } from './theme-toggle';
 import { Badge } from '@/components/ui/badge';
@@ -10,6 +10,7 @@ import { thruConfig } from '@/lib/thru/config';
 import { useWizard } from '@/components/wizard/wizard-context';
 import { getAccountSnapshot, formatBalance } from '@/lib/thru/account';
 import { getThru } from '@/lib/thru/client';
+import { Input } from '@/components/ui/input';
 
 const LINKS = [
   { href: thruConfig.docsUrl, label: 'Docs', icon: BookOpen },
@@ -22,6 +23,7 @@ export function SiteHeader() {
   const [nativeBalance, setNativeBalance] = React.useState<bigint | null>(null);
   const [tokenBalances, setTokenBalances] = React.useState<Record<string, bigint>>({});
   const [loading, setLoading] = React.useState(false);
+  const [action, setAction] = React.useState<'send' | 'receive' | null>(null);
   const refresh = React.useCallback(async () => {
     if (!account) return;
     setLoading(true);
@@ -54,7 +56,7 @@ export function SiteHeader() {
               </a>
             </Button>
           ))}
-          {account && <div className="relative"><Button variant="outline" size="sm" onClick={() => setOpen((value) => !value)} className="font-mono"><Wallet className="size-4" />{account.address.slice(0, 6)}…{account.address.slice(-4)}</Button>{open && <div className="absolute right-0 top-11 z-50 w-72 space-y-3 rounded-sm border border-border bg-background p-4 shadow-hard"><div className="flex items-center justify-between"><p className="text-sm font-semibold">Wallet balance</p><Button variant="ghost" size="sm" onClick={() => refresh().catch(() => undefined)} disabled={loading}><RefreshCw className={loading ? 'size-4 animate-spin' : 'size-4'} /></Button></div><p className="break-all font-mono text-xs text-muted-foreground">{account.address}</p><div className="rounded-sm bg-secondary/50 p-3"><p className="text-xs text-muted-foreground">Native balance</p><p className="font-mono font-semibold">{nativeBalance === null ? '—' : formatBalance(nativeBalance)} THRU</p></div>{deployments.filter((item) => item.kind === 'token').map((item) => <div key={item.metaAddress} className="rounded-sm bg-secondary/50 p-3"><p className="text-xs text-muted-foreground">{item.label} {item.details?.ticker ? `(${item.details.ticker})` : ''}</p><p className="font-mono font-semibold">{tokenBalances[item.metaAddress]?.toString() ?? '—'}</p>{item.bufferAddress && <p className="mt-2 break-all text-[10px] text-muted-foreground">Receive: <span className="font-mono">{item.bufferAddress}</span></p>}</div>)}</div>}</div>}
+          {account && <div className="relative"><Button variant="outline" size="sm" onClick={() => setOpen((value) => !value)} className="font-mono"><Wallet className="size-4" />{account.address.slice(0, 6)}…{account.address.slice(-4)}</Button>{open && <div className="absolute right-0 top-11 z-50 w-80 space-y-4 rounded-sm border border-border bg-background p-5 shadow-hard"><div className="flex items-center justify-between"><p className="text-sm font-semibold">Main wallet</p><Button variant="ghost" size="sm" onClick={() => refresh().catch(() => undefined)} disabled={loading}><RefreshCw className={loading ? 'size-4 animate-spin' : 'size-4'} /></Button></div><div className="py-2 text-center"><p className="text-xs text-muted-foreground">Native balance</p><p className="font-mono text-3xl font-bold">{nativeBalance === null ? '—' : formatBalance(nativeBalance)} THRU</p></div><div className="grid grid-cols-2 gap-3"><button type="button" onClick={() => setAction('send')} className="flex flex-col items-center gap-2 rounded-sm bg-secondary p-4 text-sm font-semibold hover:bg-secondary/70"><Send className="size-5 text-primary" />Send</button><button type="button" onClick={() => setAction('receive')} className="flex flex-col items-center gap-2 rounded-sm bg-secondary p-4 text-sm font-semibold hover:bg-secondary/70"><Copy className="size-5 text-primary" />Receive</button></div>{action === 'receive' && <div className="space-y-2 rounded-sm border border-border p-3"><p className="text-xs font-medium">Receive native THRU at</p><p className="break-all font-mono text-xs">{account.address}</p><p className="text-xs text-muted-foreground">For a minted token, share its token-account address from the token list below.</p></div>}{action === 'send' && <div className="space-y-2 rounded-sm border border-border p-3"><p className="text-xs font-medium">Send tokens</p><Input placeholder="Recipient token-account address" /><Input inputMode="numeric" placeholder="Raw amount" /><Button size="sm" className="w-full" disabled><ArrowUpRight /> Select a token to send</Button></div>}<div className="space-y-2"><p className="text-sm font-semibold">Tokens</p>{deployments.filter((item) => item.kind === 'token').map((item) => <div key={item.metaAddress} className="rounded-sm bg-secondary/50 p-3"><p className="text-xs text-muted-foreground">{item.label} {item.details?.ticker ? `(${item.details.ticker})` : ''}</p><p className="font-mono font-semibold">{tokenBalances[item.metaAddress]?.toString() ?? '—'}</p></div>)}</div></div>}</div>}
           <ThemeToggle />
         </nav>
       </div>
