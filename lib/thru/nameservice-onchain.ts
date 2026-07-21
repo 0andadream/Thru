@@ -6,7 +6,6 @@ import { getThru } from './client';
 import { thruConfig } from './config';
 import {
   buildAndSign,
-  currentSlot,
   ensureAccountExists,
   submitWithNonce,
   VmError,
@@ -94,12 +93,12 @@ function encodeRegisterSubdomain(
   return buf;
 }
 
-async function creatingProof(address: string): Promise<Uint8Array> {
-  const proof = await getThru().proofs.generate({
+async function creatingProof(address: string): Promise<{ proof: Uint8Array; slot: bigint }> {
+  const stateProof = await getThru().proofs.generate({
     address,
     proofType: CREATING_PROOF_TYPE,
   } as never);
-  return proof.proof;
+  return { proof: stateProof.proof, slot: BigInt(stateProof.slot) };
 }
 
 /** True if the given name-service account already exists on-chain. */
@@ -116,7 +115,6 @@ export async function initRoot(account: ThruAccount, root: string, onPhase?: (p:
   const proof = await creatingProof(registrar);
   const registrarBytes = decodeAddress(registrar);
   const { nonce } = await getAccountSnapshot(account.address);
-  const slot = await currentSlot();
 
   try {
     await submitWithNonce(
@@ -126,11 +124,14 @@ export async function initRoot(account: ThruAccount, root: string, onPhase?: (p:
           program: nsProgram(),
           accounts: { readWrite: [registrarBytes] },
           instructionData: async (ctx) =>
-            encodeInitRoot(ctx.getAccountIndex(registrarBytes), root.toLowerCase(), proof),
+            encodeInitRoot(ctx.getAccountIndex(registrarBytes), root.toLowerCase(), proof.proof),
           header: {
             fee: 0n,
             nonce: n,
-            startSlot: slot,
+            // The creation proof is tied to this state snapshot. Keep the
+            // transaction anchored to that same slot rather than reading a
+            // newer height after proof generation.
+            startSlot: proof.slot,
             expiryAfter: 100,
             computeUnits: 500_000,
             memoryUnits: 10_000,
@@ -163,7 +164,6 @@ export async function registerSubdomain(
   const domainBytes = decodeAddress(domain);
   const parentBytes = decodeAddress(parentAddress);
   const { nonce } = await getAccountSnapshot(account.address);
-  const slot = await currentSlot();
 
   await submitWithNonce(
     nonce,
@@ -176,12 +176,12 @@ export async function registerSubdomain(
             ctx.getAccountIndex(domainBytes),
             ctx.getAccountIndex(parentBytes),
             name.toLowerCase(),
-            proof,
+            proof.proof,
           ),
         header: {
           fee: 0n,
           nonce: n,
-          startSlot: slot,
+          startSlot: proof.slot,
           expiryAfter: 100,
           computeUnits: 500_000,
           memoryUnits: 10_000,
