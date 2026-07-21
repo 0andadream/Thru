@@ -2,7 +2,7 @@
 
 Thru Onboard is an unofficial community onboarding dApp for Thru Alphanet. It
 guides a new user through creating an account, claiming test THRU, launching a
-simple fungible token, sending or receiving that token, and registering a name.
+simple fungible token, and registering a name.
 
 The app is built with Next.js 14, TypeScript, Tailwind CSS, and Thru's official
 web packages. Keys are generated and transactions are signed in the browser.
@@ -29,18 +29,10 @@ web packages. Keys are generated and transactions are signed in the browser.
    - Initializes the owner's deterministic token account.
    - Mints an initial supply of 1,000,000 tokens to that account.
    - Shows the mint and token-account addresses in the explorer.
-4. **Send and receive the token**
-   - Sends any supported decimal amount from the owner's token account.
-   - Accepts a recipient's public Thru address, then derives their
-     mint-specific token account.
-   - Initializes that token account automatically when it does not yet exist,
-     then submits the token transfer.
-   - Provides a receive screen with copyable public wallet and token-account
-     addresses. Private keys are never shared.
-5. **Register a name**
+4. **Register a name**
    - Derives and initializes a root registrar.
    - Registers a subdomain and displays its on-chain addresses.
-6. **Review the result**
+5. **Review the result**
    - Summarizes the account, token, and name.
    - Provides copy controls and explorer links.
 
@@ -52,7 +44,7 @@ The implementation follows Thru's documented account and transaction model:
   `TokenMintAccount`, which stores token-wide configuration and supply, and
   `TokenAccount`, which stores an owner's balance for one mint.
 - Token creation uses the documented `initialize_mint`, `initialize_account`,
-  `mint_to`, and `transfer` instruction sequence.
+  and `mint_to` instruction sequence.
 - Mint addresses are derived from the mint authority and a seed. Token-account
   addresses are derived from the owner, mint, and seed.
 - New mint, token, account, and name-service accounts use creating state
@@ -153,7 +145,6 @@ components/wizard/           Wizard state, navigation, and step screens
 lib/thru/account.ts          Account balance and nonce reads
 lib/thru/client.ts           Thru RPC client
 lib/thru/deploy.ts           Simple Token launch flow
-lib/thru/token-transfer.ts   Token-account preparation and transfer flow
 lib/thru/faucet-onchain.ts   Account creation and official faucet transaction
 lib/thru/nameservice*.ts     Name derivation and registration
 lib/thru/keys.ts             Browser key generation and backup

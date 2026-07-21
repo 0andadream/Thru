@@ -217,7 +217,7 @@ export function DeployStep() {
           onBack={() => dispatch({ type: 'back' })}
           onNext={() => dispatch({ type: 'next' })}
           nextDisabled={busy}
-          nextLabel={deployment ? 'Send or receive tokens' : 'Skip for now'}
+          nextLabel={deployment ? 'Continue to naming' : 'Skip for now'}
         />
       </div>
     </StepMotion>

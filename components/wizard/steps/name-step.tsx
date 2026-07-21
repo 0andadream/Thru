@@ -72,7 +72,7 @@ export function NameStep() {
     <StepMotion>
       <div className="mx-auto max-w-2xl space-y-6">
         <StepHeading
-          eyebrow="Step 5"
+          eyebrow="Step 4"
           title="Claim your name"
           description="Register a human-readable root name and a subdomain — like alice.yourname — so people can find you without long addresses."
         />

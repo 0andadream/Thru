@@ -9,7 +9,6 @@ import { WelcomeStep } from './steps/welcome-step';
 import { CreateAccountStep } from './steps/create-account-step';
 import { FundStep } from './steps/fund-step';
 import { DeployStep } from './steps/deploy-step';
-import { TransferStep } from './steps/transfer-step';
 import { NameStep } from './steps/name-step';
 import { SuccessStep } from './steps/success-step';
 import { Spinner } from '@/components/ui/spinner';
@@ -44,7 +43,6 @@ export function Wizard() {
           {stepId === 'account' && <CreateAccountStep />}
           {stepId === 'fund' && <FundStep />}
           {stepId === 'deploy' && <DeployStep />}
-          {stepId === 'transfer' && <TransferStep />}
           {stepId === 'name' && <NameStep />}
           {stepId === 'success' && <SuccessStep />}
         </React.Fragment>
