@@ -38,7 +38,14 @@ function nsProgram(): string {
 }
 
 export function deriveRegistrarAddress(root: string): string {
-  return deriveProgramAddress({ programAddress: nsProgram(), seed: root.toLowerCase() }).address;
+  // The Name Service CLI derives root registrars from a fixed 32-byte seed:
+  // the UTF-8 root label followed by zero bytes. Passing a string directly to
+  // the SDK creates a variable-length seed, which leads to a different PDA and
+  // makes the on-chain program reject the initialization proof.
+  const rootBytes = new TextEncoder().encode(root.toLowerCase());
+  const seed = new Uint8Array(32);
+  seed.set(rootBytes.slice(0, seed.length));
+  return deriveProgramAddress({ programAddress: nsProgram(), seed }).address;
 }
 
 export function deriveDomainAddress(parentAddress: string, name: string): string {
