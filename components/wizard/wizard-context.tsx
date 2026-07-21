@@ -26,6 +26,7 @@ export interface WizardState {
   passkey: PasskeyInfo | null;
   funded: boolean;
   deployment: DeployResult | null;
+  deployments: DeployResult[];
   name: NameResult | null;
   advanced: boolean;
 }
@@ -37,6 +38,7 @@ const initialState: WizardState = {
   passkey: null,
   funded: false,
   deployment: null,
+  deployments: [],
   name: null,
   advanced: false,
 };
@@ -83,7 +85,13 @@ function reducer(state: WizardState, action: Action): WizardState {
     case 'setFunded':
       return { ...state, funded: action.value };
     case 'setDeployment':
-      return { ...state, deployment: action.deployment };
+      return {
+        ...state,
+        deployment: action.deployment,
+        deployments: action.deployment
+          ? [action.deployment, ...state.deployments.filter((item) => item.metaAddress !== action.deployment?.metaAddress)]
+          : state.deployments,
+      };
     case 'setName':
       return { ...state, name: action.name };
     case 'setAdvanced':
