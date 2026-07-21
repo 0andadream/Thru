@@ -7,6 +7,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/components/ui/toast';
 import { useWizard } from '../wizard-context';
 import { AddressRow, StepHeading, StepMotion, StepNav } from '../step-parts';
@@ -114,6 +115,11 @@ export function DeployStep() {
                     className="font-mono"
                   />
                 </div>
+              </div>
+
+              <div className="flex items-center justify-between rounded-sm border border-border bg-secondary/30 px-3 py-2.5">
+                <div><p className="text-sm font-medium">Enable freeze authority</p><p className="text-xs text-muted-foreground">Lets this wallet freeze or unfreeze token accounts later.</p></div>
+                <Switch checked={!!token.enableFreeze} onCheckedChange={(checked) => setToken((value) => ({ ...value, enableFreeze: checked }))} />
               </div>
 
               {!isTokenProgramConfigured() && (

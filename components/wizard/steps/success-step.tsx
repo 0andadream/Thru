@@ -7,7 +7,6 @@ import {
   Coins,
   KeyRound,
   RotateCcw,
-  Tag,
   Wallet,
 } from 'lucide-react';
 import { motion } from 'framer-motion';
@@ -20,9 +19,10 @@ import { AddressRow, StepHeading, StepMotion } from '../step-parts';
 import { celebrate } from '@/lib/confetti';
 import { accountUrl } from '@/lib/thru/explorer';
 import { thruConfig } from '@/lib/thru/config';
+import { TokenManager } from '../token-manager';
 
 export function SuccessStep() {
-  const { account, funded, deployment, name, passkey, dispatch } = useWizard();
+  const { account, funded, deployment, passkey, dispatch } = useWizard();
   const { toast } = useToast();
 
   React.useEffect(() => {
@@ -39,7 +39,7 @@ export function SuccessStep() {
     { icon: KeyRound, label: 'Account created', done: !!account },
     { icon: Coins, label: 'Test tokens received', done: funded },
     { icon: Wallet, label: 'Program deployed', done: !!deployment },
-    { icon: Tag, label: 'Name claimed', done: !!name },
+    { icon: Wallet, label: 'Token launched', done: !!deployment },
   ];
 
   return (
@@ -120,16 +120,10 @@ export function SuccessStep() {
               </div>
             )}
 
-            {name && (
-              <div className="space-y-2">
-                <p className="flex items-center gap-2 text-sm font-semibold">
-                  <Tag className="size-4 text-primary" /> Your name
-                </p>
-                <AddressRow label={name.fullName} value={name.subdomainAddress} href={accountUrl(name.subdomainAddress)} mono={false} />
-              </div>
-            )}
           </CardContent>
         </Card>
+
+        {account && deployment?.kind === 'token' && <TokenManager account={account} deployment={deployment} />}
 
         {/* Reminder */}
         <div className="rounded-sm border border-warning/30 bg-warning/10 p-4 text-sm">

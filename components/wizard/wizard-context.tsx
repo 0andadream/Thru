@@ -14,7 +14,6 @@ export const STEPS = [
   { id: 'account', title: 'Create Account' },
   { id: 'fund', title: 'Get Tokens' },
   { id: 'deploy', title: 'Launch Token' },
-  { id: 'name', title: 'Claim a Name' },
   { id: 'success', title: 'Done' },
 ] as const;
 

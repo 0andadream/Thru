@@ -80,6 +80,7 @@ export interface TokenForm {
   name: string;
   ticker: string;
   decimals: number;
+  enableFreeze?: boolean;
 }
 
 /**
@@ -193,6 +194,7 @@ async function deployTokenOnChain(
       decimals: form.decimals,
       mintAuthorityBytes: ownerBytes,
       creatorBytes: ownerBytes,
+      freezeAuthorityBytes: form.enableFreeze ? ownerBytes : undefined,
       ticker,
       seedHex,
       stateProof: mintProof.proof,
