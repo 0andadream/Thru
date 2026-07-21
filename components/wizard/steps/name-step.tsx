@@ -23,6 +23,7 @@ export function NameStep() {
   const [phase, setPhase] = React.useState<TxPhase>('idle');
   const [quote, setQuote] = React.useState<RegistrarQuote | null>(null);
   const [registryError, setRegistryError] = React.useState<string | null>(null);
+  const [quoteAttempt, setQuoteAttempt] = React.useState(0);
 
   const suggestions = React.useMemo(() => (account ? suggestRoots(account.address) : []), [account]);
   React.useEffect(() => {
@@ -33,11 +34,12 @@ export function NameStep() {
   React.useEffect(() => {
     if (!account) return;
     let active = true;
+    setRegistryError(null);
     getRegistrarQuote(account)
       .then((result) => active && setQuote(result))
       .catch((err) => active && setRegistryError(err instanceof Error ? err.message : 'Could not load the domain registry.'));
     return () => { active = false; };
-  }, [account]);
+  }, [account, quoteAttempt]);
 
   const valid = isValidLabel(domain);
   const busy = !['idle', 'confirmed', 'error'].includes(phase);
@@ -90,7 +92,7 @@ export function NameStep() {
               </div>
 
               <div className="space-y-3 rounded-sm border border-border bg-secondary/30 p-4 text-sm">
-                {registryError ? <p className="text-destructive">Registry unavailable: {registryError}</p> : !quote ? <p className="flex items-center gap-2 text-muted-foreground"><Loader2 className="size-4 animate-spin" /> Checking the Alphanet registrar…</p> : <>
+                {registryError ? <div className="space-y-2"><p className="text-destructive">The Alphanet RPC is temporarily unavailable. No name transaction was sent.</p><p className="break-all text-xs text-muted-foreground">{registryError}</p><Button variant="outline" size="sm" onClick={() => setQuoteAttempt((attempt) => attempt + 1)}>Retry registrar check</Button></div> : !quote ? <p className="flex items-center gap-2 text-muted-foreground"><Loader2 className="size-4 animate-spin" /> Checking the Alphanet registrar…</p> : <>
                   <div className="flex items-center justify-between gap-4"><span className="flex items-center gap-2 font-medium"><ShieldCheck className="size-4 text-primary" /> One-year lease</span><span className="font-mono">{required.toString()} payment units</span></div>
                   <div className="flex items-center justify-between gap-4 text-muted-foreground"><span>Your payment balance</span><span className={hasPayment ? 'font-mono text-success' : 'font-mono text-destructive'}>{quote.paymentBalance.toString()}</span></div>
                   {!hasPayment && <p className="text-xs text-destructive">Fund the payment token account before purchasing. The faucet funds network fees only, not registrar payment tokens.</p>}
