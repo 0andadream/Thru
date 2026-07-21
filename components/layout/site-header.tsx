@@ -53,7 +53,12 @@ export function SiteHeader() {
     if (!account || !token?.bufferAddress || !recipient || !/^\d+$/.test(sendAmount) || BigInt(sendAmount) <= 0n) return;
     setSending(true);
     try {
-      const { createTransferInstruction } = await import('@thru/programs/token'); const { decodeAddress } = await import('@thru/sdk/helpers');
+      const { createTransferInstruction, parseTokenAccountData } = await import('@thru/programs/token'); const { decodeAddress } = await import('@thru/sdk/helpers');
+      const [source, destination] = await Promise.all([getThru().accounts.get(token.bufferAddress), getThru().accounts.get(recipient)]);
+      const sourceInfo = parseTokenAccountData(source); const destinationInfo = parseTokenAccountData(destination);
+      if (sourceInfo.isFrozen || destinationInfo.isFrozen) throw new Error('A token account is frozen.');
+      if (sourceInfo.mint !== destinationInfo.mint) throw new Error('The recipient token account belongs to a different token mint.');
+      if (sourceInfo.amount < BigInt(sendAmount)) throw new Error('Your token balance is lower than the amount you entered.');
       const { nonce } = await getAccountSnapshot(account.address); const slot = await currentSlot();
       await submitWithNonce(nonce, (n) => buildAndSign(account, { program: thruConfig.tokenProgramAddress, accounts: { readWrite: [token.bufferAddress!, recipient] }, instructionData: createTransferInstruction({ sourceAccountBytes: decodeAddress(token.bufferAddress!), destinationAccountBytes: decodeAddress(recipient), amount: BigInt(sendAmount) }), header: { fee: 0n, nonce: n, startSlot: slot, expiryAfter: 100, computeUnits: 300_000, memoryUnits: 10_000, stateUnits: 10_000, chainId: thruConfig.chainId } }));
       setRecipient(''); setSendAmount(''); await refresh(); toast({ variant: 'success', title: 'Tokens sent' });
