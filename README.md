@@ -20,10 +20,9 @@ web packages. Keys are generated and transactions are signed in the browser.
    - Offers optional WebAuthn passkey registration.
 2. **Claim test THRU**
    - Creates the account on-chain when necessary.
-   - Submits the official faucet `withdraw` instruction directly from the
-     browser.
-   - Claims up to 10,000 base units and watches the live account balance.
-   - Links to the community ThruScan faucet as a backup.
+   - Submits the current faucet program's `withdraw` instruction from the browser.
+   - Claims up to 10,000 base units when the faucet vault has a balance.
+   - If that vault account is missing or empty, says so and links to the community ThruScan faucet.
 3. **Launch a Simple Token**
    - Initializes a Token Program mint.
    - Initializes the owner's deterministic token account.
@@ -105,6 +104,8 @@ The defaults target Thru Alphanet.
 | `NEXT_PUBLIC_THRU_NETWORK` | Network label | `Alphanet` |
 | `NEXT_PUBLIC_THRU_CHAIN_ID` | Transaction chain ID | `1` |
 | `NEXT_PUBLIC_FAUCET_AMOUNT` | Requested faucet amount in base units | `10000` |
+| `NEXT_PUBLIC_FAUCET_PROGRAM_ADDRESS` | Faucet program | `taFCTxR0y2eabGGaEdtTwC9pHz7ZY4CYD7FOiBFUJeAW16` |
+| `NEXT_PUBLIC_FAUCET_VAULT_ADDRESS` | Faucet vault | `taTigKYAf5mNxUNUVXeXq1HQodKc07DBzF4Pl7tCi1iXxt` |
 | `NEXT_PUBLIC_COMMUNITY_FAUCET_URL` | Backup web faucet | `https://faucet.thruscan.net` |
 | `NEXT_PUBLIC_TOKEN_PROGRAM_ADDRESS` | Token Program address | Thru's built-in Token Program |
 | `NEXT_PUBLIC_NAME_SERVICE_PROGRAM_ADDRESS` | Name Service Program address | Thru's built-in Name Service Program |

@@ -4,6 +4,7 @@ import { ConsensusStatus, type BuildAndSignTransactionOptions } from '@thru/sdk'
 import { getThru } from './client';
 import { thruConfig } from './config';
 import { privateKeyBytes, publicKeyBytes } from './keys';
+import { resignRawTransaction } from './sign';
 import type { ThruAccount, TxPhase } from './types';
 
 export interface SubmitResult {
@@ -33,10 +34,11 @@ export async function submitTransaction(
 
   onPhase?.('building');
   onPhase?.('signing');
+  const privateKey = privateKeyBytes(account);
   const { rawTransaction, signature } = await thru.transactions.buildAndSign({
     feePayer: {
       publicKey: publicKeyBytes(account),
-      privateKey: privateKeyBytes(account),
+      privateKey,
     },
     program: opts.program,
     accounts: opts.accounts,
@@ -46,12 +48,13 @@ export async function submitTransaction(
       ...opts.header,
     },
   });
+  const signedTransaction = resignRawTransaction(rawTransaction, privateKey);
 
   onPhase?.('submitting');
   onPhase?.('confirming');
 
   let finalSig = signatureToString(signature);
-  for await (const update of thru.transactions.sendAndTrack(rawTransaction, {
+  for await (const update of thru.transactions.sendAndTrack(signedTransaction, {
     timeoutMs: opts.timeoutMs ?? 60_000,
   })) {
     if (update.signature?.value) {

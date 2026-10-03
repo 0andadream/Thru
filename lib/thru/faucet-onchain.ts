@@ -7,35 +7,21 @@ import { getThru } from './client';
 import { thruConfig } from './config';
 import { getAccountSnapshot } from './account';
 import { privateKeyBytes, publicKeyBytes } from './keys';
+import { resignRawTransaction } from './sign';
 import type { ThruAccount, TxPhase } from './types';
 
 /**
- * Thru's faucet is an on-chain program. A claim is just a transaction with a
- * zero (native) program id and a 16-byte instruction:
+ * A faucet claim is a 16-byte withdraw on the faucet program:
  *   u32(1) discriminator | u16(vaultIndex) | u16(recipientIndex) | u64(amount)
- * where the indices are positions in the transaction's (sorted) account list.
- * Fees are 0 on the network, so a freshly-created account can claim for itself
- * with no operator, no server, and no CLI.
+ * The indexes are positions in the transaction account list. Fees are 0, so
+ * the new account can be the fee payer once it exists.
  *
- * The faucet vault address and this instruction layout were reproduced from the
- * official `thru` CLI and verified to match its output byte-for-byte. The vault
- * is a deployed address (configurable, since it can change on network resets).
+ * Program id and vault come from thru-base's bootstrap addresses. The vault is
+ * a real account that must already hold the tokens.
  */
+const FAUCET_PROGRAM = decodeAddress(thruConfig.faucetProgramAddress);
 const FAUCET_VAULT_ADDRESS = thruConfig.faucetVaultAddress;
-
-// Official faucet program id (FAUCET_PROGRAM in Thru's txn_tools.rs):
-// 31 zero bytes followed by 0xFA.
-const FAUCET_PROGRAM = (() => {
-  const p = new Uint8Array(32);
-  p[31] = 0xfa;
-  return p;
-})();
-// Native account-creation program id (all zero except the last byte).
-const CREATE_PROGRAM = (() => {
-  const p = new Uint8Array(32);
-  p[31] = 3;
-  return p;
-})();
+const NOOP_PROGRAM = decodeAddress(thruConfig.noopProgramAddress);
 
 const WITHDRAW_DISCRIMINATOR = 1;
 const CREATING_PROOF_TYPE = 1;
@@ -155,11 +141,12 @@ async function buildAndSign(
   account: ThruAccount,
   opts: Omit<BuildAndSignTransactionOptions, 'feePayer'>,
 ): Promise<Uint8Array> {
+  const privateKey = privateKeyBytes(account);
   const { rawTransaction } = await getThru().transactions.buildAndSign({
-    feePayer: { publicKey: publicKeyBytes(account), privateKey: privateKeyBytes(account) },
+    feePayer: { publicKey: publicKeyBytes(account), privateKey },
     ...opts,
   });
-  return rawTransaction;
+  return resignRawTransaction(rawTransaction, privateKey);
 }
 
 /** Create the account on-chain if it doesn't exist yet (fee 0, self-signed). */
@@ -179,7 +166,7 @@ export async function ensureAccountExists(account: ThruAccount, onPhase?: (p: Tx
       0n,
       (nonce) =>
         buildAndSign(account, {
-          program: CREATE_PROGRAM,
+          program: NOOP_PROGRAM,
           header: {
             fee: 0n,
             nonce,
@@ -188,7 +175,7 @@ export async function ensureAccountExists(account: ThruAccount, onPhase?: (p: Tx
             expiryAfter: 100,
             computeUnits: 10_000,
             memoryUnits: 10_000,
-            stateUnits: 10_000,
+            stateUnits: 1,
             chainId: thruConfig.chainId,
           },
           feePayerStateProof: proof.proof,
@@ -248,7 +235,7 @@ export async function faucetWithdraw(
           expiryAfter: 100,
           computeUnits: 300_000,
           memoryUnits: 10_000,
-          stateUnits: 10_000,
+          stateUnits: 0,
           chainId: thruConfig.chainId,
         },
       }),
@@ -265,14 +252,26 @@ export async function claimFaucetInBrowser(
   amount: bigint = BigInt(thruConfig.faucetAmount),
   onPhase?: (p: TxPhase) => void,
 ) {
-  // Step 1: make sure the account exists + is visible on-chain. Don't hard-fail
-  // here — the withdraw below is authoritative (it reports -508 if the account
-  // really isn't there), which lets us attribute the error to the right step.
+  // Step 1: make sure the account exists. A missing account cannot pay for
+  // itself, and the faucet vault has to already be holding tokens.
   let createError: unknown;
   try {
     await ensureAccountExists(account, onPhase);
   } catch (err) {
     createError = err;
+  }
+
+  const created = await getAccountSnapshot(account.address);
+  if (!created.exists) {
+    const detail = createError instanceof Error ? createError.message : 'the account is not on chain';
+    throw new Error(`Account activation failed — ${detail}`);
+  }
+
+  const vault = await getAccountSnapshot(FAUCET_VAULT_ADDRESS);
+  if (!vault.exists || vault.balance === 0n) {
+    throw new Error(
+      "Thru's on-chain faucet vault is empty, so it cannot pay this claim. Use the community faucet and paste your address.",
+    );
   }
 
   // Step 2: claim from the faucet. A revert (-765) is usually the faucet being
