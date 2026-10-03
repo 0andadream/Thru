@@ -8,7 +8,7 @@ const SIGNATURE_SIZE = 64;
 const TXN_DST = new TextEncoder().encode('tn_txn_sign_v1__');
 
 /**
- * Alphanet checks an RFC 8032 signature over `tn_txn_sign_v1__ || SHA-256(body)`.
+ * The current network checks an RFC 8032 signature over `tn_txn_sign_v1__ || SHA-256(body)`.
  * @thru/sdk 0.2.39 still signs with the older domain-block scheme, which the
  * node rejects before execution. Replace the trailing 64-byte signature.
  */

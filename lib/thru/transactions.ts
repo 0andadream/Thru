@@ -1,6 +1,7 @@
 'use client';
 
 import { ConsensusStatus, type BuildAndSignTransactionOptions } from '@thru/sdk';
+import { encodeSignature } from '@thru/sdk/helpers';
 import { getThru } from './client';
 import { thruConfig } from './config';
 import { privateKeyBytes, publicKeyBytes } from './keys';
@@ -35,7 +36,7 @@ export async function submitTransaction(
   onPhase?.('building');
   onPhase?.('signing');
   const privateKey = privateKeyBytes(account);
-  const { rawTransaction, signature } = await thru.transactions.buildAndSign({
+  const { rawTransaction } = await thru.transactions.buildAndSign({
     feePayer: {
       publicKey: publicKeyBytes(account),
       privateKey,
@@ -51,38 +52,33 @@ export async function submitTransaction(
   const signedTransaction = resignRawTransaction(rawTransaction, privateKey);
 
   onPhase?.('submitting');
+  const accepted = await thru.transactions.send(signedTransaction);
   onPhase?.('confirming');
 
-  let finalSig = signatureToString(signature);
-  for await (const update of thru.transactions.sendAndTrack(signedTransaction, {
-    timeoutMs: opts.timeoutMs ?? 60_000,
-  })) {
-    if (update.signature?.value) {
-      finalSig = bytesToHexLike(update.signature.value) || finalSig;
+  const finalSig = accepted || encodeSignature(signedTransaction.subarray(signedTransaction.length - 64));
+  const deadline = Date.now() + (opts.timeoutMs ?? 90_000);
+  while (Date.now() < deadline) {
+    try {
+      const status = await thru.transactions.getStatus(finalSig);
+      const exec = status.executionResult;
+      if (exec?.vmError) {
+        throw new Error(`Transaction reverted [vm ${exec.vmError}]`);
+      }
+      const done =
+        exec ||
+        status.statusCode === ConsensusStatus.FINALIZED ||
+        status.statusCode === ConsensusStatus.CLUSTER_EXECUTED;
+      if (done) {
+        onPhase?.('confirmed');
+        return { signature: finalSig };
+      }
+    } catch (err) {
+      if (err instanceof Error && err.message.startsWith('Transaction reverted')) throw err;
+      const msg = String((err as { message?: string })?.message ?? err).toLowerCase();
+      if (!msg.includes('not_found') && !msg.includes('not found')) throw err;
     }
-    const done =
-      update.executionResult ||
-      update.consensusStatus === ConsensusStatus.FINALIZED ||
-      update.consensusStatus === ConsensusStatus.CLUSTER_EXECUTED;
-    if (done) break;
+    await new Promise((resolve) => setTimeout(resolve, 2_000));
   }
 
-  onPhase?.('confirmed');
-  return { signature: finalSig };
-}
-
-function signatureToString(sig: unknown): string {
-  if (!sig) return '';
-  if (typeof sig === 'string') return sig;
-  // SignedTransactionResult.signature is a domain Signature with toThruFmt().
-  const anySig = sig as { toThruFmt?: () => string; value?: Uint8Array };
-  if (typeof anySig.toThruFmt === 'function') return anySig.toThruFmt();
-  if (anySig.value) return bytesToHexLike(anySig.value);
-  return String(sig);
-}
-
-function bytesToHexLike(bytes: Uint8Array): string {
-  return Array.from(bytes)
-    .map((b) => b.toString(16).padStart(2, '0'))
-    .join('');
+  throw new Error('Timed out waiting for the transaction to execute.');
 }

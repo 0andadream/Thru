@@ -19,7 +19,9 @@ export function getThru(): Thru {
         // format is rejected with "invalid gRPC request content-type
         // application/grpc-web+json".
         useBinaryFormat: true,
-        defaultTimeoutMs: 30_000,
+        // Betanet confirms across multiple nodes. A 30s RPC deadline was
+        // aborting mint initialization before the tracker finished.
+        defaultTimeoutMs: 90_000,
       },
     });
   }

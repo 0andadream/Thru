@@ -3,6 +3,7 @@
 import { decodeAddress } from '@thru/sdk/helpers';
 import { ConsensusStatus, type BuildAndSignTransactionOptions } from '@thru/sdk';
 import { sleep } from '@/lib/utils';
+import { encodeSignature } from '@thru/sdk/helpers';
 import { getThru } from './client';
 import { thruConfig } from './config';
 import { getAccountSnapshot } from './account';
@@ -85,22 +86,44 @@ async function currentSlot(): Promise<bigint> {
   return candidates.length ? candidates.reduce((a, b) => (a > b ? a : b)) : 0n;
 }
 
-/** Submit a signed transaction and wait for execution; throw VmError on failure. */
+function isMissing(err: unknown): boolean {
+  const msg = String((err as { message?: string })?.message ?? err).toLowerCase();
+  return msg.includes('not_found') || msg.includes('not found') || msg.includes('[not_found]');
+}
+
+/**
+ * Submit, then poll for execution. A single long status stream was getting cut
+ * off on Betanet before the mint transaction finished.
+ */
 async function submit(rawTransaction: Uint8Array, onPhase?: (p: TxPhase) => void) {
   const thru = getThru();
   onPhase?.('submitting');
+  const accepted = await thru.transactions.send(rawTransaction);
   onPhase?.('confirming');
-  for await (const update of thru.transactions.sendAndTrack(rawTransaction, { timeoutMs: 60_000 })) {
-    const exec = update.executionResult;
-    if (exec && exec.vmError && exec.vmError !== 0) {
-      throw new VmError(exec.vmError, exec.userErrorCode);
+  const localSignature = encodeSignature(rawTransaction.subarray(rawTransaction.length - 64));
+  const signature = accepted || localSignature;
+  const deadline = Date.now() + 90_000;
+  let lastError: unknown;
+  while (Date.now() < deadline) {
+    try {
+      const status = await thru.transactions.getStatus(signature);
+      const exec = status.executionResult;
+      if (exec?.vmError) {
+        throw new VmError(exec.vmError, exec.userErrorCode);
+      }
+      const done =
+        exec ||
+        status.statusCode === ConsensusStatus.FINALIZED ||
+        status.statusCode === ConsensusStatus.CLUSTER_EXECUTED;
+      if (done) return;
+    } catch (err) {
+      if (err instanceof VmError) throw err;
+      if (!isMissing(err)) lastError = err;
     }
-    const done =
-      exec ||
-      update.consensusStatus === ConsensusStatus.FINALIZED ||
-      update.consensusStatus === ConsensusStatus.CLUSTER_EXECUTED;
-    if (done) break;
+    await new Promise((resolve) => setTimeout(resolve, 2_000));
   }
+  if (lastError instanceof Error) throw lastError;
+  throw new Error('Timed out waiting for the transaction to execute.');
 }
 
 /**
@@ -270,7 +293,7 @@ export async function claimFaucetInBrowser(
   const vault = await getAccountSnapshot(FAUCET_VAULT_ADDRESS);
   if (!vault.exists || vault.balance === 0n) {
     throw new Error(
-      "Thru's on-chain faucet vault is empty, so it cannot pay this claim. Use the community faucet and paste your address.",
+      "Thru's on-chain faucet vault is empty, so it cannot pay this claim.",
     );
   }
 

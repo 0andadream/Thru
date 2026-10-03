@@ -48,6 +48,25 @@ function randomSeedHex(bytes = 16): string {
 }
 
 /**
+ * Betanet drops a token transaction that asks for far more state than it
+ * creates. A new mint or token account is one state unit, and its creation
+ * proof is only valid when the transaction starts at that proof's slot.
+ * Minting into an account that already exists creates no state.
+ */
+function tokenHeader(nonce: bigint, slot: bigint, stateUnits: number) {
+  return {
+    fee: 0n,
+    nonce,
+    startSlot: slot,
+    expiryAfter: 100,
+    computeUnits: 300_000,
+    memoryUnits: 10_000,
+    stateUnits,
+    chainId: thruConfig.chainId,
+  };
+}
+
+/**
  * Derive the deterministic mint + token-account preview addresses,
  * using the SDK's real address-derivation primitives. Used for the preview
  * path (when no on-chain program/loader is configured) so users still see and
@@ -92,14 +111,13 @@ export async function finishTokenSetup(account: ThruAccount, deployment: DeployR
   const mintAccount = await thru.accounts.get(deployment.metaAddress); const mint = parseMintAccountData(mintAccount);
   if (mint.mintAuthority !== account.address) throw new Error('This wallet is not the mint authority for this token.');
   const tokenAcc = deriveTokenAccountAddress(thru, account.address, deployment.metaAddress, program, new Uint8Array(32));
-  const header = (nonce: bigint, slot: bigint) => ({ fee: 0n, nonce, startSlot: slot, expiryAfter: 100, computeUnits: 300_000, memoryUnits: 10_000, stateUnits: 10_000, chainId: thruConfig.chainId });
-  async function step(accounts: Parameters<typeof buildAndSign>[1]['accounts'], instructionData: Parameters<typeof buildAndSign>[1]['instructionData']) { const { nonce } = await getAccountSnapshot(account.address); const slot = await currentSlot(); await submitWithNonce(nonce, (n) => buildAndSign(account, { program, accounts, instructionData, header: header(n, slot) }), onPhase); }
+  async function step(accounts: Parameters<typeof buildAndSign>[1]['accounts'], instructionData: Parameters<typeof buildAndSign>[1]['instructionData'], slot: bigint, stateUnits: number) { const { nonce } = await getAccountSnapshot(account.address); await submitWithNonce(nonce, (n) => buildAndSign(account, { program, accounts, instructionData, header: tokenHeader(n, slot, stateUnits) }), onPhase); }
   if (!(await getAccountSnapshot(tokenAcc.address)).exists) {
     const proof = await thru.proofs.generate({ address: tokenAcc.address, proofType: 1 } as never);
-    await step({ readWrite: [tokenAcc.address], readOnly: [deployment.metaAddress] }, createInitializeAccountInstruction({ tokenAccountBytes: tokenAcc.bytes, mintAccountBytes: (await import('@thru/sdk/helpers')).decodeAddress(deployment.metaAddress), ownerAccountBytes: ownerBytes, seedBytes: new Uint8Array(32), stateProof: proof.proof }));
+    await step({ readWrite: [tokenAcc.address], readOnly: [deployment.metaAddress] }, createInitializeAccountInstruction({ tokenAccountBytes: tokenAcc.bytes, mintAccountBytes: (await import('@thru/sdk/helpers')).decodeAddress(deployment.metaAddress), ownerAccountBytes: ownerBytes, seedBytes: new Uint8Array(32), stateProof: proof.proof }), proof.slot, 1);
     const deadline = Date.now() + 30_000; while (!(await getAccountSnapshot(tokenAcc.address)).exists) { if (Date.now() > deadline) throw new Error('Token account is not visible yet. Try Finish setup again shortly.'); await new Promise((r) => setTimeout(r, 1500)); }
   }
-  await step({ readWrite: [deployment.metaAddress, tokenAcc.address] }, createMintToInstruction({ mintAccountBytes: (await import('@thru/sdk/helpers')).decodeAddress(deployment.metaAddress), destinationAccountBytes: tokenAcc.bytes, authorityAccountBytes: ownerBytes, amount: 1_000_000n * 10n ** BigInt(mint.decimals) }));
+  await step({ readWrite: [deployment.metaAddress, tokenAcc.address] }, createMintToInstruction({ mintAccountBytes: (await import('@thru/sdk/helpers')).decodeAddress(deployment.metaAddress), destinationAccountBytes: tokenAcc.bytes, authorityAccountBytes: ownerBytes, amount: 1_000_000n * 10n ** BigInt(mint.decimals) }), await currentSlot(), 0);
   return { ...deployment, bufferAddress: tokenAcc.address, warning: undefined, details: { ...deployment.details, 'Your token account': tokenAcc.address, 'Initial supply': `1,000,000 ${mint.ticker}` } };
 }
 
@@ -169,27 +187,25 @@ async function deployTokenOnChain(
 
   const program = thruConfig.tokenProgramAddress;
   const ownerBytes = publicKeyBytes(account);
-  const header = (n: bigint, slot: bigint) => ({
-    fee: 0n,
-    nonce: n,
-    startSlot: slot,
-    expiryAfter: 100,
-    computeUnits: 300_000,
-    memoryUnits: 10_000,
-    stateUnits: 10_000,
-    chainId: thruConfig.chainId,
-  });
 
-  // Submit one token instruction, fetching a fresh nonce + slot each time.
+  // Submit one token instruction. Callers pass the creation-proof slot for a
+  // new account, and a fresh tip slot when the instruction creates nothing.
   async function step(
     accounts: Parameters<typeof buildAndSign>[1]['accounts'],
     instructionData: Parameters<typeof buildAndSign>[1]['instructionData'],
+    slot: bigint,
+    stateUnits: number,
   ) {
     const { nonce } = await getAccountSnapshot(account.address);
-    const slot = await currentSlot();
     await submitWithNonce(
       nonce,
-      (n) => buildAndSign(account, { program, accounts, instructionData, header: header(n, slot) }),
+      (n) =>
+        buildAndSign(account, {
+          program,
+          accounts,
+          instructionData,
+          header: tokenHeader(n, slot, stateUnits),
+        }),
       onPhase,
     );
   }
@@ -219,6 +235,8 @@ async function deployTokenOnChain(
       seedHex,
       stateProof: mintProof.proof,
     }),
+    mintProof.slot,
+    1,
   );
   await waitForAccount(mint.address, 'Token mint');
 
@@ -251,6 +269,8 @@ async function deployTokenOnChain(
         seedBytes: tokenAccountSeed,
         stateProof: taProof.proof,
       }),
+      taProof.slot,
+      1,
     );
     tokenAccountAddress = tokenAcc.address;
     await waitForAccount(tokenAcc.address, 'Token account');
@@ -264,6 +284,8 @@ async function deployTokenOnChain(
         authorityAccountBytes: ownerBytes,
         amount: supply,
       }),
+      await currentSlot(),
+      0,
     );
     mintedSupply = supply;
   } catch (err) {

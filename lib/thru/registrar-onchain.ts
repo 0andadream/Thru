@@ -34,13 +34,13 @@ export async function fetchRegistrarConfig(): Promise<RegistrarConfig> {
   const address = deriveRegistrarConfigAddress();
   const account = await getThru().accounts.get(address);
   if (account.meta?.owner?.toThruFmt() !== thruConfig.thruRegistrarProgramAddress) {
-    throw new Error('The Alphanet domain registry configuration belongs to an unexpected program.');
+    throw new Error(`The ${thruConfig.network} domain registry configuration belongs to an unexpected program.`);
   }
   const data = account.data?.data;
-  if (!data || data.length < 244) throw new Error('The Alphanet domain registry is not initialized.');
+  if (!data || data.length < 244) throw new Error(`The ${thruConfig.network} domain registry is not initialized.`);
   const at = (offset: number) => encodeAddress(data.slice(offset, offset + 32));
   const rootLength = new DataView(data.buffer, data.byteOffset).getUint32(224, true);
-  if (rootLength === 0 || rootLength > 64) throw new Error('The Alphanet domain registry has an invalid root name.');
+  if (rootLength === 0 || rootLength > 64) throw new Error(`The ${thruConfig.network} domain registry has an invalid root name.`);
   return { address, nameServiceProgram: at(0), rootRegistrar: at(32), treasurer: at(64), tokenMint: at(96), tokenProgram: at(128), rootName: text.decode(data.slice(160, 160 + rootLength)), pricePerYear: new DataView(data.buffer, data.byteOffset).getBigUint64(228, true) };
 }
 

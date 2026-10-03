@@ -1,13 +1,13 @@
 # Thru Onboard
 
-Thru Onboard is an unofficial community onboarding dApp for Thru Alphanet. It
+Thru Onboard is an unofficial community onboarding dApp for Thru Betanet. It
 guides a new user through creating an account, claiming test THRU, launching a
-simple fungible token, and registering a name.
+simple fungible token, and reviewing the result.
 
 The app is built with Next.js 14, TypeScript, Tailwind CSS, and Thru's official
 web packages. Keys are generated and transactions are signed in the browser.
 
-> **Alphanet only.** Test tokens have no monetary value, and network state may
+> **Betanet only.** Test tokens have no monetary value, and network state may
 > be reset. Never use an account created here for real assets.
 
 ## What the app does
@@ -22,7 +22,7 @@ web packages. Keys are generated and transactions are signed in the browser.
    - Creates the account on-chain when necessary.
    - Submits the current faucet program's `withdraw` instruction from the browser.
    - Claims up to 10,000 base units when the faucet vault has a balance.
-   - If that vault account is missing or empty, says so and links to the community ThruScan faucet.
+   - If that vault account is missing or empty, says so. The public ThruScan faucet still serves Alphanet, so the wizard does not link it.
 3. **Launch a Simple Token**
    - Initializes a Token Program mint.
    - Initializes the owner's deterministic token account.
@@ -95,20 +95,20 @@ npm run build
 
 ## Configuration
 
-The defaults target Thru Alphanet.
+The defaults target Thru Betanet.
 
 | Variable | Purpose | Default |
 | --- | --- | --- |
-| `NEXT_PUBLIC_THRU_RPC_URL` | Browser RPC endpoint | `https://rpc.alphanet.thru.org` |
+| `NEXT_PUBLIC_THRU_RPC_URL` | Browser RPC endpoint | `https://rpc.betanet.thru.org` |
 | `NEXT_PUBLIC_THRU_EXPLORER_URL` | Explorer base URL | `https://scan.thru.org` |
-| `NEXT_PUBLIC_THRU_NETWORK` | Network label | `Alphanet` |
-| `NEXT_PUBLIC_THRU_CHAIN_ID` | Transaction chain ID | `1` |
+| `NEXT_PUBLIC_THRU_NETWORK` | Network label | `Betanet` |
+| `NEXT_PUBLIC_THRU_CHAIN_ID` | Transaction chain ID | `2` |
 | `NEXT_PUBLIC_FAUCET_AMOUNT` | Requested faucet amount in base units | `10000` |
 | `NEXT_PUBLIC_FAUCET_PROGRAM_ADDRESS` | Faucet program | `taFCTxR0y2eabGGaEdtTwC9pHz7ZY4CYD7FOiBFUJeAW16` |
 | `NEXT_PUBLIC_FAUCET_VAULT_ADDRESS` | Faucet vault | `taTigKYAf5mNxUNUVXeXq1HQodKc07DBzF4Pl7tCi1iXxt` |
-| `NEXT_PUBLIC_COMMUNITY_FAUCET_URL` | Backup web faucet | `https://faucet.thruscan.net` |
-| `NEXT_PUBLIC_TOKEN_PROGRAM_ADDRESS` | Token Program address | Thru's built-in Token Program |
-| `NEXT_PUBLIC_NAME_SERVICE_PROGRAM_ADDRESS` | Name Service Program address | Thru's built-in Name Service Program |
+| `NEXT_PUBLIC_COMMUNITY_FAUCET_URL` | Optional backup web faucet | unset |
+| `NEXT_PUBLIC_TOKEN_PROGRAM_ADDRESS` | Token Program address | `taTOKENKRgcl3vO0yVhftATDbXuhgWcfaaxv9xpEEdMdUE` |
+| `NEXT_PUBLIC_NAME_SERVICE_PROGRAM_ADDRESS` | Name Service Program address | `taNAMEqRNEDeMWp0cDYmMVdZyTZiF5NyGDR9zTwH42rWQG` |
 
 See [`.env.example`](./.env.example) for optional server-side faucet gateway
 and relayer settings.
@@ -155,6 +155,6 @@ lib/thru/explorer.ts         Explorer URL helpers
 
 ## Status
 
-Thru documentation and Alphanet behavior are evolving. This repository pins
-the Thru web packages to `0.2.39`; revalidate program addresses, instruction
-layouts, and network behavior when upgrading.
+Thru documentation and Betanet behavior are evolving. This repository pins
+the Thru web packages to `0.2.39` and retargets them at the Betanet program
+addresses. Revalidate instruction layouts when upgrading those packages.

@@ -14,6 +14,7 @@ import { claimName, getRegistrarQuote, isValidLabel, suggestRoots } from '@/lib/
 import type { RegistrarQuote } from '@/lib/thru/registrar-onchain';
 import type { TxPhase } from '@/lib/thru/types';
 import { accountUrl, txUrl } from '@/lib/thru/explorer';
+import { thruConfig } from '@/lib/thru/config';
 import { popSuccess } from '@/lib/confetti';
 
 export function NameStep() {
@@ -92,7 +93,7 @@ export function NameStep() {
               </div>
 
               <div className="space-y-3 rounded-sm border border-border bg-secondary/30 p-4 text-sm">
-                {registryError ? <div className="space-y-2"><p className="text-destructive">The Alphanet RPC is temporarily unavailable. No name transaction was sent.</p><p className="break-all text-xs text-muted-foreground">{registryError}</p><Button variant="outline" size="sm" onClick={() => setQuoteAttempt((attempt) => attempt + 1)}>Retry registrar check</Button></div> : !quote ? <p className="flex items-center gap-2 text-muted-foreground"><Loader2 className="size-4 animate-spin" /> Checking the Alphanet registrar…</p> : <>
+                {registryError ? <div className="space-y-2"><p className="text-destructive">The {thruConfig.network} RPC is temporarily unavailable. No name transaction was sent.</p><p className="break-all text-xs text-muted-foreground">{registryError}</p><Button variant="outline" size="sm" onClick={() => setQuoteAttempt((attempt) => attempt + 1)}>Retry registrar check</Button></div> : !quote ? <p className="flex items-center gap-2 text-muted-foreground"><Loader2 className="size-4 animate-spin" /> Checking the {thruConfig.network} registrar…</p> : <>
                   <div className="flex items-center justify-between gap-4"><span className="flex items-center gap-2 font-medium"><ShieldCheck className="size-4 text-primary" /> One-year lease</span><span className="font-mono">{required.toString()} payment units</span></div>
                   <div className="flex items-center justify-between gap-4 text-muted-foreground"><span>Your payment balance</span><span className={hasPayment ? 'font-mono text-success' : 'font-mono text-destructive'}>{quote.paymentBalance.toString()}</span></div>
                   {!hasPayment && <p className="text-xs text-destructive">Fund the payment token account before purchasing. The faucet funds network fees only, not registrar payment tokens.</p>}

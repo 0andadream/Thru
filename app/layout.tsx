@@ -20,7 +20,7 @@ export const metadata: Metadata = {
   title: 'Thru Onboard — Get started on Thru in 60 seconds',
   description:
     'A friendly, guided wallet that helps anyone create a Thru account, get test tokens, launch a token, and send it. Testnet only.',
-  keywords: ['Thru', 'blockchain', 'onboarding', 'wallet', 'testnet', 'alphanet', 'web3'],
+  keywords: ['Thru', 'blockchain', 'onboarding', 'wallet', 'testnet', 'betanet', 'web3'],
   authors: [{ name: 'Thru Onboard' }],
   openGraph: {
     title: 'Thru Onboard — Get started on Thru in 60 seconds',

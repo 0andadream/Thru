@@ -6,7 +6,7 @@ import { resignRawTransaction } from './sign';
 
 ed.hashes.sha512 = sha512;
 
-test('signs the transaction body with the current Alphanet scheme', () => {
+test('signs the transaction body with the current transaction scheme', () => {
   const privateKey = new Uint8Array(32);
   privateKey[0] = 7;
   const body = Uint8Array.from([1, 2, 3, 4, 5]);

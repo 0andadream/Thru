@@ -29,6 +29,7 @@ import {
 } from '@/lib/thru/keys';
 import { createPasskey, isPasskeySupported } from '@/lib/thru/passkey';
 import { accountUrl } from '@/lib/thru/explorer';
+import { thruConfig } from '@/lib/thru/config';
 import { popSuccess } from '@/lib/confetti';
 
 export function CreateAccountStep() {
@@ -238,7 +239,7 @@ export function CreateAccountStep() {
             {account && !generating && (
               <p className="text-xs text-muted-foreground">
                 A new address appears on the explorer after its first on-chain transaction.
-                Restored accounts retain their existing Alphanet history.
+                Restored accounts retain their existing {thruConfig.network} history.
               </p>
             )}
           </CardContent>

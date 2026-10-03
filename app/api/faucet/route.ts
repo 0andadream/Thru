@@ -5,6 +5,7 @@ import os from 'node:os';
 import path from 'node:path';
 import fs from 'node:fs';
 import { checkRateLimit } from '@/lib/rate-limit';
+import { thruConfig } from '@/lib/thru/config';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -21,8 +22,7 @@ const FAUCET_URL = process.env.FAUCET_URL ?? '';
 // is exactly how the CLI's `thru faucet withdraw <address> <amount>` works.
 const CLI_BIN = process.env.THRU_CLI_BIN ?? ''; // e.g. "thru" (on PATH) or an absolute path
 const OPERATOR_KEY = process.env.THRU_FAUCET_OPERATOR_KEY ?? ''; // 64-hex funded key (server secret)
-const SERVER_RPC =
-  process.env.THRU_RPC_URL ?? process.env.NEXT_PUBLIC_THRU_RPC_URL ?? 'https://rpc.alphanet.thru.org';
+const SERVER_RPC = process.env.THRU_RPC_URL ?? thruConfig.rpcUrl;
 const AMOUNT = String(
   process.env.THRU_FAUCET_AMOUNT ?? process.env.NEXT_PUBLIC_FAUCET_AMOUNT ?? '10000',
 );

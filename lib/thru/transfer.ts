@@ -182,7 +182,6 @@ async function createDefaultTokenAccount(
 
   try {
     const { nonce } = await getAccountSnapshot(payer.address);
-    const slot = await currentSlot();
     await submitWithNonce(nonce, (nonceValue) =>
       buildAndSign(payer, {
         program: thruConfig.tokenProgramAddress,
@@ -194,7 +193,7 @@ async function createDefaultTokenAccount(
           seedBytes: ZERO_SEED,
           stateProof: proof.proof,
         }),
-        header: txHeader(nonceValue, slot),
+        header: txHeader(nonceValue, proof.slot, 1),
       }),
     );
   } catch (error) {
@@ -211,7 +210,7 @@ async function createDefaultTokenAccount(
   return derived.address;
 }
 
-function txHeader(nonce: bigint, slot: bigint) {
+function txHeader(nonce: bigint, slot: bigint, stateUnits = 0) {
   return {
     fee: 0n,
     nonce,
@@ -219,7 +218,7 @@ function txHeader(nonce: bigint, slot: bigint) {
     expiryAfter: 100,
     computeUnits: 300_000,
     memoryUnits: 10_000,
-    stateUnits: 10_000,
+    stateUnits,
     chainId: thruConfig.chainId,
   };
 }

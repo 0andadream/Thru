@@ -4,7 +4,7 @@ function base(): string {
   return thruConfig.explorerUrl.replace(/\/$/, '');
 }
 
-/** scan.thru.org needs the rpc query param to resolve Alphanet data. */
+/** scan.thru.org uses the rpc query param to select which network to read. */
 function rpcQuery(): string {
   return `?rpc=${encodeURIComponent(thruConfig.rpcUrl)}`;
 }

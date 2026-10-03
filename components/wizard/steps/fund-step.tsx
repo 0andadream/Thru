@@ -204,25 +204,27 @@ export function FundStep() {
                     </>
                   )}
                 </Button>
-                <div className="flex flex-col items-center gap-2 rounded-sm border border-border-muted bg-secondary/30 p-3 text-center text-xs text-muted-foreground sm:flex-row sm:justify-between sm:text-left">
-                  <span>If Thru&apos;s faucet is busy, use the community backup.</span>
-                  <div className="flex flex-wrap justify-center gap-2">
-                    {account && (
-                      <CopyButton
-                        value={account.address}
-                        label="Copy my address"
-                        variant="ghost"
-                        size="sm"
-                        showValue
-                      />
-                    )}
-                    <Button variant="outline" size="sm" asChild>
-                      <a href={thruConfig.communityFaucetUrl} target="_blank" rel="noreferrer noopener">
-                        Open ThruScan faucet <ExternalLink className="size-4" />
-                      </a>
-                    </Button>
+                {thruConfig.communityFaucetUrl ? (
+                  <div className="flex flex-col items-center gap-2 rounded-sm border border-border-muted bg-secondary/30 p-3 text-center text-xs text-muted-foreground sm:flex-row sm:justify-between sm:text-left">
+                    <span>If Thru&apos;s faucet is busy, use the community backup.</span>
+                    <div className="flex flex-wrap justify-center gap-2">
+                      {account && (
+                        <CopyButton
+                          value={account.address}
+                          label="Copy my address"
+                          variant="ghost"
+                          size="sm"
+                          showValue
+                        />
+                      )}
+                      <Button variant="outline" size="sm" asChild>
+                        <a href={thruConfig.communityFaucetUrl} target="_blank" rel="noreferrer noopener">
+                          Open community faucet <ExternalLink className="size-4" />
+                        </a>
+                      </Button>
+                    </div>
                   </div>
-                </div>
+                ) : null}
               </div>
             )}
 
@@ -230,18 +232,21 @@ export function FundStep() {
               <div className="space-y-3 rounded-sm border border-destructive/40 bg-destructive/5 p-4 text-sm">
                 <p className="text-destructive">{message}</p>
                 <p className="text-xs text-muted-foreground">
-                  The {thruConfig.network} faucet can be flaky during busy periods or after a network
-                  reset. Try again, or use the community faucet with your address:
+                  {thruConfig.communityFaucetUrl
+                    ? `The ${thruConfig.network} faucet can be flaky during busy periods or after a network reset. Try again, or use the community faucet with your address:`
+                    : 'Try the claim again in a moment.'}
                 </p>
                 <div className="flex flex-col gap-2 sm:flex-row">
                   <Button variant="outline" size="sm" onClick={handleFaucet} disabled={busy}>
                     <RefreshCw className="size-4" /> Try again
                   </Button>
-                  <Button variant="outline" size="sm" asChild>
-                    <a href={thruConfig.communityFaucetUrl} target="_blank" rel="noreferrer noopener">
-                      Open community faucet <ExternalLink className="size-4" />
-                    </a>
-                  </Button>
+                  {thruConfig.communityFaucetUrl ? (
+                    <Button variant="outline" size="sm" asChild>
+                      <a href={thruConfig.communityFaucetUrl} target="_blank" rel="noreferrer noopener">
+                        Open community faucet <ExternalLink className="size-4" />
+                      </a>
+                    </Button>
+                  ) : null}
                   {account && <CopyButton value={account.address} label="Copy my address" variant="ghost" size="sm" showValue />}
                 </div>
               </div>
