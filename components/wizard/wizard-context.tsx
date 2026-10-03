@@ -76,6 +76,7 @@ function reducer(state: WizardState, action: Action): WizardState {
         passkey: null,
         funded: false,
         deployment: null,
+        deployments: state.account?.address === action.account.address ? state.deployments : [],
         name: null,
       };
     case 'setBackedUp':

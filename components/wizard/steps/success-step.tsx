@@ -38,7 +38,6 @@ export function SuccessStep() {
   const checklist = [
     { icon: KeyRound, label: 'Account created', done: !!account },
     { icon: Coins, label: 'Test tokens received', done: funded },
-    { icon: Wallet, label: 'Program deployed', done: !!deployment },
     { icon: Wallet, label: 'Token launched', done: !!deployment },
   ];
 
@@ -61,7 +60,7 @@ export function SuccessStep() {
         </div>
 
         {/* Checklist */}
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+        <div className="grid grid-cols-3 gap-3">
           {checklist.map((c) => (
             <div
               key={c.label}

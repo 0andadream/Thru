@@ -29,9 +29,10 @@ web packages. Keys are generated and transactions are signed in the browser.
    - Initializes the owner's deterministic token account.
    - Mints an initial supply of 1,000,000 tokens to that account.
    - Shows the mint and token-account addresses in the explorer.
-4. **Register a name**
-   - Derives and initializes a root registrar.
-   - Registers a subdomain and displays its on-chain addresses.
+4. **Use the wallet**
+   - Shows the native THRU balance and each launched token balance in the header.
+   - Sends tokens to a Thru address or an existing token account.
+   - Creates the recipient's default token account when they do not have one yet.
 5. **Review the result**
    - Summarizes the account, token, and name.
    - Provides copy controls and explorer links.
