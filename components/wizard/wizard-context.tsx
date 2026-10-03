@@ -11,7 +11,7 @@ import type {
 
 export const STEPS = [
   { id: 'welcome', title: 'Welcome' },
-  { id: 'account', title: 'Create Account' },
+  { id: 'account', title: 'Wallet' },
   { id: 'fund', title: 'Get Tokens' },
   { id: 'deploy', title: 'Launch Token' },
   { id: 'success', title: 'Done' },

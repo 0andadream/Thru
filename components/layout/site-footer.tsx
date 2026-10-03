@@ -18,7 +18,7 @@ export function SiteFooter() {
           </div>
         </div>
         <div className="flex flex-col items-center justify-between gap-3 text-xs text-muted-foreground sm:flex-row">
-          <p className="font-mono">Built for the Thru community · Open-source onboarding wizard</p>
+          <p className="font-mono">Built for the Thru community · Open-source Betanet wallet</p>
           <div className="flex items-center gap-4 font-mono">
             <a href={thruConfig.docsUrl} target="_blank" rel="noreferrer" className="hover:text-primary">
               Docs

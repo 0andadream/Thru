@@ -17,15 +17,15 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: 'Thru Onboard — Get started on Thru in 60 seconds',
+  title: 'Thru — Betanet wallet',
   description:
-    'A friendly, guided wallet that helps anyone create a Thru account, get test tokens, launch a token, and send it. Testnet only.',
+    'Create or import a Thru wallet in the browser, then fund it, launch a token, and send it on Betanet. A key is made only when you click Create wallet.',
   keywords: ['Thru', 'blockchain', 'onboarding', 'wallet', 'testnet', 'betanet', 'web3'],
   authors: [{ name: 'Thru Onboard' }],
   openGraph: {
-    title: 'Thru Onboard — Get started on Thru in 60 seconds',
+    title: 'Thru — Betanet wallet',
     description:
-      'Create an account, get test tokens, launch a token, and send it on Thru.',
+      'Create or import a Thru wallet, fund it, launch a token, and send it on Betanet.',
     type: 'website',
   },
 };

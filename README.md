@@ -12,9 +12,9 @@ web packages. Keys are generated and transactions are signed in the browser.
 
 ## What the app does
 
-1. **Create or restore an account**
-   - Generates a new Ed25519 keypair in the browser, or restores a returning
-     user's account from a 64-character hexadecimal private key.
+1. **Create or import a wallet**
+   - Does not generate a key until the user clicks Create wallet.
+   - Restores a returning wallet from a 64-character hexadecimal private key.
    - Shows the Thru `ta...` address.
    - Requires new users to download a JSON key backup before continuing.
    - Offers optional WebAuthn passkey registration.
@@ -28,11 +28,15 @@ web packages. Keys are generated and transactions are signed in the browser.
    - Initializes the owner's deterministic token account.
    - Mints an initial supply of 1,000,000 tokens to that account.
    - Shows the mint and token-account addresses in the explorer.
-4. **Use the wallet**
+4. **Use the token and the name service**
+   - Mints more supply, burns tokens, freezes or thaws the token account, and closes it once the balance is zero.
+   - Sends tokens from the wallet to a Thru address or an existing token account.
+   - Registers a name-service root and a name under it. The paid `.thru` registry is not initialized on Betanet, so the wizard does not sell domains.
+5. **Use the wallet**
    - Shows the native THRU balance and each launched token balance in the header.
    - Sends tokens to a Thru address or an existing token account.
    - Creates the recipient's default token account when they do not have one yet.
-5. **Review the result**
+6. **Review the result**
    - Summarizes the account, token, and name.
    - Provides copy controls and explorer links.
 

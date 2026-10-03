@@ -30,6 +30,7 @@ import {
 import { createPasskey, isPasskeySupported } from '@/lib/thru/passkey';
 import { accountUrl } from '@/lib/thru/explorer';
 import { thruConfig } from '@/lib/thru/config';
+import { consumeWalletImport, subscribeWalletImport } from '@/lib/thru/wallet-intent';
 import { popSuccess } from '@/lib/confetti';
 
 export function CreateAccountStep() {
@@ -46,11 +47,10 @@ export function CreateAccountStep() {
   const passkeySupported = React.useMemo(() => isPasskeySupported(), []);
 
   React.useEffect(() => {
-    // Auto-generate on first entry if there's no account yet.
-    if (!account && !generating) {
-      void handleGenerate();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    if (consumeWalletImport()) setShowImport(true);
+    return subscribeWalletImport(() => {
+      if (consumeWalletImport()) setShowImport(true);
+    });
   }, []);
 
   async function handleGenerate() {
@@ -139,8 +139,8 @@ export function CreateAccountStep() {
       <div className="mx-auto max-w-2xl space-y-6">
         <StepHeading
           eyebrow="Step 1"
-          title="Set up your Thru account"
-          description="Create a new account or restore an existing one. Keys stay in your browser and are never sent to the server."
+          title="Your Thru wallet"
+          description="Create a new wallet or import one you already saved. A key is made only when you click Create wallet."
         />
 
         <div className="grid gap-3 sm:grid-cols-2">
@@ -151,7 +151,7 @@ export function CreateAccountStep() {
             disabled={generating || importing}
           >
             {generating ? <Loader2 className="animate-spin" /> : <KeyRound />}
-            Create new account
+            Create wallet
           </Button>
           <Button
             variant={showImport ? 'default' : 'outline'}
@@ -160,7 +160,7 @@ export function CreateAccountStep() {
             disabled={generating || importing}
           >
             <Upload />
-            Import private key
+            Import wallet
           </Button>
         </div>
 
@@ -168,7 +168,7 @@ export function CreateAccountStep() {
           <Card className="border-warning/40">
             <CardContent className="space-y-4 p-5">
               <div>
-                <p className="font-semibold">Restore an existing account</p>
+                <p className="font-semibold">Import a wallet</p>
                 <p className="text-sm text-muted-foreground">
                   Enter the 64-character hexadecimal private key from your Thru backup.
                   It is processed locally and never uploaded.
@@ -207,7 +207,7 @@ export function CreateAccountStep() {
                 loading={importing}
                 disabled={!importValue.trim() || importing}
               >
-                <Upload /> Restore account
+                <Upload /> Import wallet
               </Button>
             </CardContent>
           </Card>
@@ -219,9 +219,9 @@ export function CreateAccountStep() {
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2 text-sm font-semibold">
                 <KeyRound className="size-4 text-primary" />
-                Your public address
+                Wallet address
               </div>
-              {!showImport && (
+              {account && !showImport && (
                 <Button variant="ghost" size="sm" onClick={handleGenerate} disabled={generating}>
                   {generating ? <Loader2 className="animate-spin" /> : <RefreshCw />}
                   Regenerate
@@ -229,9 +229,13 @@ export function CreateAccountStep() {
               )}
             </div>
 
-            {generating || !account ? (
+            {generating ? (
               <div className="flex h-[62px] items-center justify-center rounded-sm border border-dashed border-border text-sm text-muted-foreground">
-                <Loader2 className="mr-2 size-4 animate-spin" /> Generating a secure keypair…
+                <Loader2 className="mr-2 size-4 animate-spin" /> Creating your wallet…
+              </div>
+            ) : !account ? (
+              <div className="flex h-[62px] items-center justify-center rounded-sm border border-dashed border-border px-4 text-center text-sm text-muted-foreground">
+                No wallet yet. Create one here, or import a private key.
               </div>
             ) : (
               <AddressRow label="Public address (safe to share)" value={account.address} href={accountUrl(account.address)} />

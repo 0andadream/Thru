@@ -1,21 +1,23 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { KeyRound, Coins, Rocket, Wallet, ArrowRight } from 'lucide-react';
+import { KeyRound, Coins, Rocket, Wallet, ArrowRight, Download } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useWizard } from '../wizard-context';
+import { useWalletGate } from '../use-wallet-gate';
 import { StepMotion } from '../step-parts';
 import { thruConfig } from '@/lib/thru/config';
 
 const HIGHLIGHTS = [
-  { icon: KeyRound, tag: 'KEYS', title: 'Create an account', text: 'Ed25519 keypair, generated on your device.' },
-  { icon: Coins, tag: 'GAS', title: 'Pull test tokens', text: 'Free faucet drip to pay for transactions.' },
-  { icon: Rocket, tag: 'SHIP', title: 'Deploy a program', text: 'A token or sample program, one click.' },
-  { icon: Wallet, tag: 'WALLET', title: 'Manage tokens', text: 'Track balances and manage tokens you launch.' },
+  { icon: Wallet, tag: 'WALLET', title: 'Your keys', text: 'Create or import a wallet. Nothing is generated until you click.' },
+  { icon: Coins, tag: 'FUND', title: 'Betanet THRU', text: 'Claim test tokens from the on-chain faucet.' },
+  { icon: Rocket, tag: 'TOKEN', title: 'Launch and trade', text: 'Mint, send, burn, freeze, or close a token you control.' },
+  { icon: KeyRound, tag: 'NAME', title: 'Register a name', text: 'Create a name-service root and a name under it.' },
 ];
 
 export function WelcomeStep() {
-  const { dispatch } = useWizard();
+  const { account, keyBackedUp, dispatch } = useWizard();
+  const { creating, createWallet, importWallet } = useWalletGate();
 
   return (
     <StepMotion>
@@ -27,39 +29,70 @@ export function WelcomeStep() {
             transition={{ delay: 0.05 }}
             className="label-mono text-primary"
           >
-            Language-agnostic L1 · No CLI · No extensions
+            {thruConfig.network} wallet · Keys stay on this device
           </motion.p>
 
           <h1 className="text-balance text-4xl font-extrabold leading-[1.05] tracking-tight sm:text-6xl">
-            Start getting real
-            <br className="hidden sm:block" /> on <span className="text-brand">Thru</span> in 60 seconds
+            A wallet for <span className="text-brand">Thru</span>
           </h1>
 
           <p className="mx-auto max-w-xl text-pretty text-base text-muted-foreground sm:text-lg">
-            Thru is an L1 built close to the metal. This is the shortest path onto it: spin up an
-            account, pull test tokens, and launch your first token — all on{' '}
-            {thruConfig.network}, no command line required.
+            Create a wallet or import one you already have. Then fund it, launch a token, and
+            use it on {thruConfig.network}. No extension and no command line.
           </p>
 
-          <div className="flex flex-col items-center justify-center gap-3 sm:flex-row">
-            <Button
-              variant="gradient"
-              size="lg"
-              className="group w-full gap-2 text-base sm:w-auto"
-              onClick={() => dispatch({ type: 'next' })}
-            >
-              Start now
-              <ArrowRight className="transition-transform group-hover:translate-x-0.5" />
-            </Button>
-            <Button variant="outline" size="lg" asChild className="w-full sm:w-auto">
-              <a href={thruConfig.docsUrl} target="_blank" rel="noreferrer">
-                Read the docs
-              </a>
-            </Button>
+          <div className="mx-auto max-w-md space-y-4 rounded-sm border border-foreground bg-card p-5 text-left shadow-hard-sm">
+            <div className="flex items-center justify-between gap-3">
+              <span className="label-mono inline-flex items-center gap-2 text-primary">
+                <span className={`size-2 rounded-full ${account ? 'bg-success' : 'bg-warning'}`} />
+                {account ? 'Connected' : 'Not connected'}
+              </span>
+              <span className="font-mono text-[11px] text-muted-foreground">
+                {thruConfig.network} · chain {thruConfig.chainId}
+              </span>
+            </div>
+            <div>
+              <p className="text-xs text-muted-foreground">Wallet</p>
+              <p className="truncate font-mono text-sm">
+                {account ? account.address : 'No wallet on this device'}
+              </p>
+            </div>
+            <div className="grid gap-2 sm:grid-cols-2">
+              {account ? (
+                <Button
+                  variant="gradient"
+                  size="lg"
+                  className="w-full"
+                  onClick={() => dispatch({ type: 'goto', index: keyBackedUp ? 2 : 1 })}
+                >
+                  Open wallet
+                  <ArrowRight />
+                </Button>
+              ) : (
+                <Button
+                  variant="gradient"
+                  size="lg"
+                  className="w-full"
+                  onClick={() => void createWallet()}
+                  loading={creating}
+                >
+                  <Wallet /> Create wallet
+                </Button>
+              )}
+              <Button variant="outline" size="lg" className="w-full" onClick={importWallet} disabled={creating}>
+                <Download /> Import wallet
+              </Button>
+            </div>
+            {account ? (
+              <Button variant="ghost" className="w-full" onClick={() => void createWallet()} loading={creating}>
+                Create a new wallet
+              </Button>
+            ) : (
+              <p className="text-center font-mono text-[11px] text-muted-foreground">
+                Nothing is generated until you click Create wallet.
+              </p>
+            )}
           </div>
-          <p className="font-mono text-xs text-muted-foreground">
-            Free · Testnet only · Keys never leave your device
-          </p>
         </div>
 
         <div className="grid grid-cols-1 gap-3 text-left sm:grid-cols-2">

@@ -7,6 +7,7 @@ import {
   Coins,
   KeyRound,
   RotateCcw,
+  Tag,
   Wallet,
 } from 'lucide-react';
 import { motion } from 'framer-motion';
@@ -19,10 +20,11 @@ import { AddressRow, StepHeading, StepMotion } from '../step-parts';
 import { celebrate } from '@/lib/confetti';
 import { accountUrl } from '@/lib/thru/explorer';
 import { thruConfig } from '@/lib/thru/config';
+import { NamePanel } from '../name-panel';
 import { TokenManager } from '../token-manager';
 
 export function SuccessStep() {
-  const { account, funded, deployment, passkey, dispatch } = useWizard();
+  const { account, funded, deployment, name, passkey, dispatch } = useWizard();
   const { toast } = useToast();
 
   React.useEffect(() => {
@@ -32,13 +34,14 @@ export function SuccessStep() {
   function startOver() {
     clearWizardStorage();
     dispatch({ type: 'reset' });
-    toast({ title: 'Fresh start', description: 'Wizard reset. A new account will be generated.' });
+    toast({ title: 'Fresh start', description: 'Create or import a wallet when you are ready.' });
   }
 
   const checklist = [
     { icon: KeyRound, label: 'Account created', done: !!account },
     { icon: Coins, label: 'Test tokens received', done: funded },
     { icon: Wallet, label: 'Token launched', done: !!deployment },
+    { icon: Tag, label: 'Name registered', done: !!name?.onChain },
   ];
 
   return (
@@ -60,7 +63,7 @@ export function SuccessStep() {
         </div>
 
         {/* Checklist */}
-        <div className="grid grid-cols-3 gap-3">
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
           {checklist.map((c) => (
             <div
               key={c.label}
@@ -123,6 +126,7 @@ export function SuccessStep() {
         </Card>
 
         {account && deployment?.kind === 'token' && <TokenManager account={account} deployment={deployment} />}
+        <NamePanel />
 
         {/* Reminder */}
         <div className="rounded-sm border border-warning/30 bg-warning/10 p-4 text-sm">

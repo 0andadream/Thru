@@ -4,7 +4,7 @@ import { getRegistrarQuote, purchaseDomain } from './registrar-onchain';
 import type { NameRecord, NameResult, ThruAccount, TxPhase } from './types';
 
 // Registrar domains accept the same friendly labels as the official CLI.
-const NAME_RE = /^[a-z0-9](?:[a-z0-9-]{0,62}[a-z0-9])?$/;
+const NAME_RE = /^[a-z0-9]{1,32}$/;
 
 export function isValidLabel(label: string): boolean {
   return NAME_RE.test(label.toLowerCase());
@@ -16,7 +16,7 @@ export function suggestRoots(seed: string): string[] {
   const pick = (i: number) => words[(n + i) % words.length];
   return [
     `${pick(0)}${(n % 97).toString().padStart(2, '0')}`,
-    `${pick(3)}-${pick(6)}`,
+    `${pick(3)}${pick(6)}`,
     `${pick(1)}${pick(4)}`,
   ];
 }
